@@ -46,7 +46,8 @@ contains
 
         !> Seed random number generatr
 
-        !> Initialize font
+        ! Initialize font (all characters are 5 bytes)
+        ! - TODO: factor this out as an include file for easy
 
         memory( 0) = I8(b'11110000') ! E
         memory( 1) = I8(b'10000000')
@@ -101,6 +102,8 @@ contains
         memory(47) = I8(b'11110000')
         memory(48) = I8(b'00010000')
         memory(49) = I8(b'00010000')
+
+        font_addr = [43,13,29,37,45,27,31,8,33,35,41,18,4,22,0,2]
 
     end subroutine
 
@@ -242,6 +245,10 @@ contains
             else
                 pc = pc + 2
             end if
+        case(int(z'5000',int16)) ! 5xy0: skip next instr if V(x) == V(y)
+
+            pc = pc + merge(2,4,v(x) == v(y))
+            
         case(int(z'6000',int16)) ! 6xkk; set V(x) = kk
             print '("Set v[",Z4,"] = ",Z4)', x, kk
             v(x) = kk
@@ -250,6 +257,10 @@ contains
             print '("Set v[",Z4,"] += ",Z4)', x, kk
             v(x) = v(x) + kk
             pc = pc + 2
+        case(int(z'9000',int16)) ! 9xy0: skip the next instruction is V(x) does not equal V(y)
+            
+            pc = pc + merge(4,2,v(x) /= v(y))
+
         case(int(z'A000',int16)) ! Annn: set I to address nnn
             write(*,'(A,Z4)') "Set I to ", nnn
             I = nnn
@@ -269,6 +280,19 @@ contains
             if (kk == 15) then
                 delay_timer = v(x)
                 pc = pc + 2
+            else if (kk == 18) then
+                sound_timer = v(x)
+                pc = pc + 2
+            else if (kk == I8(z'1E')) then
+
+            else if (kk == 29) then        ! FX29: set I to location of sprite for 
+                                      !the character in VX
+                I = font_addr(v(x))
+                pc = pc + 2
+            else if (kk = 55) then
+                ! register dump
+            else if (kk = 65) then
+                ! register load
             end if
         case default
             call unknown_opcode(opcode)
