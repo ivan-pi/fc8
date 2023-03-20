@@ -22,10 +22,13 @@ LDLIBS=$(EGGX2003_LIB) $(EGGX_LIB) -lX11
 
 all: chip8
 
-chip8: chip8.F90 randint8.o
+chip8: chip8.F90 randint8.o op8xy5.o
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 randint8.o: randint8.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+op8xy5.o: op8xy5.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 .PHONY: clean
