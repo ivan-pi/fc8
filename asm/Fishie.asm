@@ -1,5 +1,6 @@
 #include "chip8.asm"
 
+main:
     CLS                 ; 00E0      Clear screen
     LD I, fish          ; A220      Load Fish pictogram
     LD V2, 8            ; 6208      Sprite-size in bytes
