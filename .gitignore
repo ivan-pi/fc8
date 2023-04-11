@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# CHIP8 cartridges/ROMS
+*.bin
+*.rom

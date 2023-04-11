@@ -219,10 +219,10 @@ contains
 
       print '("PC: ",Z4," opcode: ",Z4)', pc, opcode
 
-      x = readx(opcode)
-      y = ready(opcode)
+      x = readx(opcode) ! A value from 0 to F
+      y = ready(opcode) ! A value from 0 to F
 
-      n   = iand(opcode,int(z'000F',int16)) ! the lowest 4 bits
+      n   = I8(iand(opcode,int(z'000F',int16))) ! the lowest 4 bits
       kk  = iand(opcode,int(z'00FF',int16)) ! the lowest 8 bits
       nnn = iand(opcode,int(z'0FFF',int16)) ! the lowest 12 bits
 
@@ -239,6 +239,7 @@ contains
             sp = sp - 1
             pc = stack(sp)
          case default
+            ! The 0NNN opcode (machine language subroutine) lands here
             call unknown_opcode(opcode)
          end select
       case(int(z'1000',int16)) ! 1nnn: jump to address nnn
@@ -248,7 +249,7 @@ contains
          !print '(A,Z4,A,I0)', "jumping to address (hex) ", nnn, " (dec) ", nnn
 
       case(int(z'2000',int16)) ! 2nnn: call address nnn
-            stack(sp) = int(pc + 2, int16)
+            stack(sp) = I16(pc + 2)
             sp = sp + 1
             pc = nnn
       case(int(z'3000',int16)) ! 3xkk: skip next instr if V(x) == kk
@@ -307,7 +308,7 @@ contains
          print '(A,I0,2X,Z4)', "Opcode F... ", opcode, opcode
          select case(kk)
          case(I16(z'07'))
-            V(x) = delay_timer
+            V(x) = I8(delay_timer)
             pc = pc + 2
          case(I16(z'11'))
             call wait_for_keypress(keypad)
@@ -324,14 +325,15 @@ contains
          case(I16(z'29'))
             ! FX29: Set I to location of sprite for
             !       the charater in V(X)
+            ! TODO: Check V(x) in range 0 - 15
             I = fontidx(V(x))
             pc = pc + 2
          case(I16(z'33'))
             ! FX33: Decode VX into binary-coded decimal
-            write(vxstr,'(I0.4)') transfer(V(x),1_Int16)
-            memory(I)   = index('0123456789ABCDEF',vxstr(2:2)) - 1
-            memory(I+1) = index('0123456789ABCDEF',vxstr(3:3)) - 1
-            memory(I+2) = index('0123456789ABCDEF',vxstr(4:4)) - 1
+            write(vxstr,'(I0.3)') V(x)
+            memory(I)   = I8(index('0123456789ABCDEF',vxstr(2:2)) - 1)
+            memory(I+1) = I8(index('0123456789ABCDEF',vxstr(3:3)) - 1)
+            memory(I+2) = I8(index('0123456789ABCDEF',vxstr(4:4)) - 1)
             pc = pc + 2
          case(I16(z'55'))
             ! FX55: Register dump
@@ -353,6 +355,12 @@ contains
 
       call flush_screen(win)
       !call print_state()
+
+      print *, "delay timer, VF = ", delay_timer, V(15)
+
+      if (delay_timer > 0) then
+        delay_timer = delay_timer - 1
+      end if
 
    end subroutine
 
@@ -520,9 +528,7 @@ contains
       logical :: sprite(0:n-1,0:7), collide
       integer :: row, col, sx, sy, zx, zy 
 
-      integer, parameter :: coll_reg = int(z'F')
-
-      v(coll_reg) = 0 
+      v(15) = 0 
 
       do col = 0, 7
          do row = 0, n-1
@@ -537,11 +543,17 @@ contains
             zx = vx + col
             zy = vy + row
 
+            zx = mod(zx,64)
+            zy = mod(zy,32)
+
             collide = sprite(row,col) .eqv. screen(zx,zy)
-            if (collide) v(coll_reg) = 1
+            if (screen(zx,zy)) then
+              if (collide) v(15) = 1
+            end if
             screen(zx,zy) = .not. collide
          end do
       end do
+
    end subroutine
 
    !> Flush the Display Pixels
