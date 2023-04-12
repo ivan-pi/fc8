@@ -18,9 +18,11 @@ private
 public :: int8, int16
 public :: loadgame, memory
 public :: initmem, vexec
+public :: timers
 
 integer(int8) :: memory(0:4095) = 0
 integer(int8) :: V(0:15) = 0
+
 integer :: I  = 0
 integer :: PC = 512   ! z'200'
 
@@ -218,7 +220,7 @@ contains
 
       opcode = fetch_opcode()
 
-      print '("PC: ",Z4," opcode: ",Z4)', pc, opcode
+      print '("PC: ",Z4," opcode: ",Z0.4)', pc, opcode
 
       x = readx(opcode) ! A value from 0 to F
       y = ready(opcode) ! A value from 0 to F
@@ -305,13 +307,13 @@ contains
          pc = pc + 2
       case(int(z'B000',int16)) ! Bnnn: jump to location nnn + V(0)
          pc = nnn + as_uint(V(0))
+         !pc = nnn + V(0)
       case(int(z'C000',int16)) ! Cxkk: V(x) = random byte AND kk
          V(x) = iand(rand(),I8(kk))
          pc = pc + 2
       case(int(z'D000',int16)) ! Dxyn: display an n-byte sprite starting at memory
                                  !       location I at (Vx, Vy) on the screen, VF = collision
          print '(A,Z4,2X,Z4,A,I2)', "Draw sprite at ",v(x),v(y)," of height ", n
-
          call draw_sprite(v(x),v(y),n,win,collision)
          if (collision) then
             v(15) = 1
@@ -341,7 +343,6 @@ contains
            call unknown_opcode(opcode)
          end select
       case(I16(z'F000')) ! F...
-         print '(A,I0,2X,Z4)', "Opcode F... ", opcode, opcode
          select case(kk)
          case(I16(z'07'))
             V(x) = I8(delay_timer)
@@ -352,12 +353,13 @@ contains
             print *, "FX0A V(x) = ", V(x)
             pc = pc + 2
          case(I16(z'15'))
-            delay_timer = V(x)
+            delay_timer = as_uint(V(x))
             pc = pc + 2
          case(I16(z'18'))
-            sound_timer = V(x)
+            sound_timer = as_uint(V(x))
             pc = pc + 2
          case(I16(z'1E'))
+            !I = I + V(x)
             I = I + as_uint(V(x))
             pc = pc + 2
          case(I16(z'29'))
@@ -369,8 +371,7 @@ contains
          case(I16(z'33'))
             ! FX33: Decode VX into binary-coded decimal
             ! TODO: MAke 
-            !write(vxstr,'(I0.4)') V(x)
-            write(vxstr,'(I0.4)') iand(transfer(V(x),1_int16),I16(z'00FF'))
+            write(vxstr,'(I0.4)') as_uint(V(x))
             memory(I)   = I8(index('0123456789ABCDEF',vxstr(2:2)) - 1)
             memory(I+1) = I8(index('0123456789ABCDEF',vxstr(3:3)) - 1)
             memory(I+2) = I8(index('0123456789ABCDEF',vxstr(4:4)) - 1)
@@ -393,27 +394,18 @@ contains
          call unknown_opcode(opcode)
       end select
 
-      !call flush_screen(win)
-      !call print_state()
-
-      print *, "delay timer, VF = ", delay_timer, V(15)
-
-      if (delay_timer > 0) then
-        delay_timer = delay_timer - 1
-      end if
-
    end subroutine
 
    function as_uint(x) result(y)
       integer(int8), intent(in), value :: x
       integer(int16) :: y
-      y = iand(transfer(x,y),int(z'00FF',int16))
+      y = iand(transfer(x,y),I16(z'00FF'))
    end function
 
-   subroutine op8switch(n,Vx,Vy,VF)
-      integer(Int8), intent(in) :: n
-      integer(Int8), intent(inout) :: Vx, VF
-      integer(Int8), intent(in), value :: Vy
+   subroutine op8switch(N,VX,VY,VF)
+      integer(Int8), intent(in) :: N
+      integer(Int8), intent(inout) :: VX, VF
+      integer(Int8), intent(in), value :: VY
 
       ! VF can potentially alias Vy, which can be problematic...
       ! Perhaps best to set a status flag, and then update 
@@ -448,62 +440,21 @@ contains
          Vx = ieor(Vx,Vy)
       case(I8(z'4'))
          ! 8xy4
-         block
-            integer(Int16) :: sxy, bx, by
-            !bx = transfer(vx,bx)
-            !by = transfer(vy,by)
-            !bx = iand(bx,I16(z'00FF'))
-            !by = iand(by,I16(z'00FF'))
-            bx = as_uint(vx)
-            by = as_uint(vy)
-            sxy = bx + by
-            Vx = Vx + Vy
-            if (sxy > I16(z'FF')) then
-               VF = 1
-            else
-               VF = 0
-            end if
-         end block
-      case(I8(z'5'))
-         !8XY5: SUB Vx Vy
-         !print '(A,2X,B0.16,2X,B0.16)', "before = ", int(Vx,1_Int16), int(Vy,1_Int16)
-         ! block
-         !    integer(Int16) :: bx, by
-         !    bx = transfer(vx,bx)
-         !    by = transfer(vy,by)
-
-         !    bx = iand(bx,I16(z'00FF'))
-         !    by = iand(by,I16(z'00FF'))
-
-         !    !write(*,'(A,B0.16,2X,B0.8)') "bx      = ", bx, vx
-         !    !write(*,'(A,B0.16,2X,B0.8)') "by      = ", by, vy
-
-         !    if (bx >= by) then
-         !       vf = 1
-         !    else
-         !       vf = 0
-         !    end if
-
-         !    !write(*,'(A,B0.16,2X,B0.8)') "bx - by = ", bx - by, vx - vy
-         !    vx = vx - vy
-
-         ! end block
-         !call op8xy5(Vx,Vy,Vf)
-         !print '(A,2X,I0,2X,I0)', "after = ", Vx, Vf
-         borrow = as_uint(Vx) >= as_uint(Vy)
-
-         print *, "Vx = ", as_uint(Vx)
-         print *, "Vy = ", as_uint(Vy)
-         print '(A,Z4,2X,Z4)', "SUB vx, vy = ", Vx - vY, as_uint(Vx) - as_uint(Vy)
-
-         Vx = Vx - Vy
-
+         borrow = (as_uint(vx) + as_uint(vy)) > I16(z'FF')
+         Vx = Vx + Vy
          if (borrow) then
             VF = 1
          else
             VF = 0
          end if
-
+      case(I8(z'5'))
+         borrow = as_uint(Vx) >= as_uint(Vy)
+         Vx = Vx - Vy
+         if (borrow) then
+            VF = 1
+         else
+            VF = 0
+         end if
       case(I8(z'6'))
          ! 8XY6: SHR Vx, Vy
          !Vx = Vy
@@ -528,30 +479,6 @@ contains
       end select
 
    end subroutine
-
-   pure function iadd(a,b) result(ia)
-      integer(Int8), intent(in) :: a, b
-      integer(Int8) :: carry, ib, ia
-      ia = a
-      ib = b
-      do while(ib /= 0_Int8)
-         carry = iand(ia,ib)
-         ia = ieor(ia,ib)
-         ib = shiftl(carry,1_Int8)
-      end do
-   end function
-
-   pure function iadd16(a,b) result(ia)
-      integer(Int16), intent(in) :: a, b
-      integer(Int16) :: carry, ib, ia
-      ia = a
-      ib = b
-      do while(ib /= 0_Int16)
-         carry = iand(ia,ib)
-         ia = ieor(ia,ib)
-         ib = shiftl(carry,1_Int16)
-      end do
-   end function
 
    subroutine wait_for_keypress(keypad)
       logical, intent(inout) :: keypad(0:15)
@@ -583,22 +510,20 @@ contains
 
    end subroutine
 
-    ! subroutine tick()
-    !     if (delay_timer > 0) then
-    !         delay_timer = delay_timer - 1
-    !     end if
+   subroutine timers()
+      if (delay_timer > 0) delay_timer = delay_timer - 1
     !     if (sound_timer > 0) then
     !         sound_timer = sound_timer - 1
     !         if (sound_timer == 0) then
     !             print *, "BEEP"
     !         end if
     !     end if
-    ! end subroutine
+   end subroutine
+
 
    subroutine unknown_opcode(opcode)
       integer(int16), intent(in) :: opcode
       write(*,'(A,Z4)') "FATAL ERROR: Unknown opcode = ", opcode
-      pause
       stop
    end subroutine
 
@@ -625,7 +550,9 @@ contains
          end do
       end do
 
+#if DEBUG
       print *, "Drawn sprite at address I = ", I
+#endif
 
       do row = 0, n-1
          do col = 0, 7
@@ -670,7 +597,7 @@ contains
       end do
 
      call copylayer(win,1,0)
-     call msleep(100)
+     call msleep(5)
 
    end subroutine
 
@@ -704,6 +631,8 @@ program main
     integer(int16) :: inst
     logical :: rom_exists
 
+    integer(8) :: delta, tprev, tcurr, trate, tstep
+
     call initmem()
 
     nargs = command_argument_count()
@@ -735,15 +664,22 @@ program main
 
     call gsetnonblock(0)
 
-    open(11,file="debug.txt")
+   call system_clock(tprev,trate)
+   tstep = nint(trate/60.d0)
+   !print *, "tstep = ", tstep
 
-    do
-        call vexec(win)
-    end do
+   do
+      call vexec(win)
 
-    close(11)
+      call system_clock(tcurr)
+      delta = tcurr - tprev
+      if (delta > tstep) then
+         call timers()
+         tprev = tcurr
+      end if
 
-    call ggetch(key)
-    call gcloseall()
+   end do
+
+   call gcloseall()
 
 end program main
