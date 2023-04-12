@@ -14,6 +14,9 @@ jumping_X_and_O.rom: jumping_X_and_O.asm chip8.asm
 Fishie.rom: Fishie.asm chip8.asm
 	customasm -o $@ $(ASM_FLAGS) $<
 
+mytest.rom: mytest.asm chip8.asm
+	customasm -o $@ $(ASM_FLAGS) $<
+
 .phony: clean
 clean:
 	rm *.rom

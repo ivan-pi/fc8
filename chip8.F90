@@ -30,7 +30,7 @@ integer(int16) :: stack(16) = 0
 integer :: delay_timer = 0
 integer :: sound_timer = 0
 
-logical :: keypad(16)
+logical :: keypad(0:15) = .false.
 
 interface
    function rand() bind(c,name="randint8")
@@ -213,6 +213,7 @@ contains
       integer(int16), parameter :: CLS_ = int(z'00E0')
       integer(int16), parameter :: RET_ = int(z'00EE')
 
+      logical :: collision
       character(len=4) :: vxstr
 
       opcode = fetch_opcode()
@@ -231,8 +232,8 @@ contains
          select case(kk)
          case (CLS_)
             print *, "Clear the screen"
-            call clear_window(win)
             screen = .false.
+            call clear_window(win)
             pc = pc + 2
          case (RET_)
             print *, "Return from subroutine"
@@ -253,13 +254,17 @@ contains
             sp = sp + 1
             pc = nnn
       case(int(z'3000',int16)) ! 3xkk: skip next instr if V(x) == kk
-            if (V(x) == kk) then
+            if (as_uint(V(x)) == kk) then
                 pc = pc + 4
             else
                 pc = pc + 2
             end if
       case(int(z'4000',int16)) ! 4xkk: skip next instr if V(x) /= kk
-            if (V(x) /= kk) then
+            print '("Skip next instruction if v[",I0,"] = ",Z4," /= ",Z4)', x, V(x), kk
+            if (as_uint(V(x)) /= kk) then
+               print '(B16)', V(x)
+               print '(B16)', kk
+               print *, "Result = .true. (V(x) /= kk)"
                 pc = pc + 4
             else
                 pc = pc + 2
@@ -279,6 +284,13 @@ contains
             v(x) = v(x) + I8(kk)
             pc = pc + 2
       case(I16(z'8000'))
+         !if (x == 15_int8) then
+         !   error stop "Register collision"
+         !end if
+
+         ! We need to define what happens first, the register update
+         ! or the status flag
+
          call op8switch(n,V(x),V(y),V(15))
          pc = pc + 2
       case(int(z'9000',int16)) ! 9xy0: skip the next instruction is V(x) does not equal V(y)
@@ -292,7 +304,7 @@ contains
          I = nnn
          pc = pc + 2
       case(int(z'B000',int16)) ! Bnnn: jump to location nnn + V(0)
-         pc = nnn + V(0)
+         pc = nnn + as_uint(V(0))
       case(int(z'C000',int16)) ! Cxkk: V(x) = random byte AND kk
          V(x) = iand(rand(),I8(kk))
          pc = pc + 2
@@ -300,18 +312,44 @@ contains
                                  !       location I at (Vx, Vy) on the screen, VF = collision
          print '(A,Z4,2X,Z4,A,I2)', "Draw sprite at ",v(x),v(y)," of height ", n
 
-         call draw_sprite(v(x),v(y),n,win)
+         call draw_sprite(v(x),v(y),n,win,collision)
+         if (collision) then
+            v(15) = 1
+         else
+            v(15) = 0
+         end if
+
          pc = pc + 2
       case(I16(z'E000'))
-         call unknown_opcode(opcode)
+         select case(kk)
+         case(I16(z'009E'))
+           ! TODO: Check VX range in 0-15
+           if (keypad(V(x))) then
+              pc = pc + 4
+           else
+              pc = pc + 2
+           end if
+         case(I16(z'00A1'))
+           ! TODO: Check VX range in 0-15
+           if (.not. keypad(V(x))) then
+              pc = pc + 4
+           else
+              pc = pc + 2
+           end if
+         case default
+          print *, "IMPOSSIBLE"
+           call unknown_opcode(opcode)
+         end select
       case(I16(z'F000')) ! F...
          print '(A,I0,2X,Z4)', "Opcode F... ", opcode, opcode
          select case(kk)
          case(I16(z'07'))
             V(x) = I8(delay_timer)
             pc = pc + 2
-         case(I16(z'11'))
+         case(I16(z'0A'))
             call wait_for_keypress(keypad)
+            V(x) = findloc(keypad,.true.,1) - 1
+            print *, "FX0A V(x) = ", V(x)
             pc = pc + 2
          case(I16(z'15'))
             delay_timer = V(x)
@@ -320,17 +358,19 @@ contains
             sound_timer = V(x)
             pc = pc + 2
          case(I16(z'1E'))
-            I = I + V(x)
+            I = I + as_uint(V(x))
             pc = pc + 2
          case(I16(z'29'))
             ! FX29: Set I to location of sprite for
-            !       the charater in V(X)
+            !       the character in V(X)
             ! TODO: Check V(x) in range 0 - 15
             I = fontidx(V(x))
             pc = pc + 2
          case(I16(z'33'))
             ! FX33: Decode VX into binary-coded decimal
-            write(vxstr,'(I0.3)') V(x)
+            ! TODO: MAke 
+            !write(vxstr,'(I0.4)') V(x)
+            write(vxstr,'(I0.4)') iand(transfer(V(x),1_int16),I16(z'00FF'))
             memory(I)   = I8(index('0123456789ABCDEF',vxstr(2:2)) - 1)
             memory(I+1) = I8(index('0123456789ABCDEF',vxstr(3:3)) - 1)
             memory(I+2) = I8(index('0123456789ABCDEF',vxstr(4:4)) - 1)
@@ -353,7 +393,7 @@ contains
          call unknown_opcode(opcode)
       end select
 
-      call flush_screen(win)
+      !call flush_screen(win)
       !call print_state()
 
       print *, "delay timer, VF = ", delay_timer, V(15)
@@ -364,10 +404,24 @@ contains
 
    end subroutine
 
+   function as_uint(x) result(y)
+      integer(int8), intent(in), value :: x
+      integer(int16) :: y
+      y = iand(transfer(x,y),int(z'00FF',int16))
+   end function
+
    subroutine op8switch(n,Vx,Vy,VF)
       integer(Int8), intent(in) :: n
       integer(Int8), intent(inout) :: Vx, VF
-      integer(Int8), intent(in) :: Vy
+      integer(Int8), intent(in), value :: Vy
+
+      ! VF can potentially alias Vy, which can be problematic...
+      ! Perhaps best to set a status flag, and then update 
+      ! the register outside of this subroutine
+      !
+      ! We use "value" to prevent this
+      !
+      ! V(x) shouldn't be equal to VF
 
       interface
          subroutine op8xy5(Vx,Vy,Vf) bind(c,name="op8xy5")
@@ -376,6 +430,8 @@ contains
             integer(c_int8_t) :: Vf
          end subroutine
       end interface
+
+      logical :: borrow
 
       select case(n)
       case(I8(z'0'))
@@ -394,71 +450,79 @@ contains
          ! 8xy4
          block
             integer(Int16) :: sxy, bx, by
-            bx = transfer(vx,bx)
-            by = transfer(vy,by)
-            bx = iand(bx,I16(z'00FF'))
-            by = iand(by,I16(z'00FF'))
+            !bx = transfer(vx,bx)
+            !by = transfer(vy,by)
+            !bx = iand(bx,I16(z'00FF'))
+            !by = iand(by,I16(z'00FF'))
+            bx = as_uint(vx)
+            by = as_uint(vy)
             sxy = bx + by
-            if (sxy > 255) then
+            Vx = Vx + Vy
+            if (sxy > I16(z'FF')) then
                VF = 1
             else
                VF = 0
             end if
-            Vx = Vx + Vy
          end block
       case(I8(z'5'))
          !8XY5: SUB Vx Vy
-         print '(A,2X,B0.16,2X,B0.16)', "before = ", int(Vx,1_Int16), int(Vy,1_Int16)
+         !print '(A,2X,B0.16,2X,B0.16)', "before = ", int(Vx,1_Int16), int(Vy,1_Int16)
+         ! block
+         !    integer(Int16) :: bx, by
+         !    bx = transfer(vx,bx)
+         !    by = transfer(vy,by)
 
+         !    bx = iand(bx,I16(z'00FF'))
+         !    by = iand(by,I16(z'00FF'))
 
-         block
-            integer(Int16) :: bx, by
-            bx = transfer(vx,bx)
-            by = transfer(vy,by)
+         !    !write(*,'(A,B0.16,2X,B0.8)') "bx      = ", bx, vx
+         !    !write(*,'(A,B0.16,2X,B0.8)') "by      = ", by, vy
 
-            bx = iand(bx,I16(z'00FF'))
-            by = iand(by,I16(z'00FF'))
+         !    if (bx >= by) then
+         !       vf = 1
+         !    else
+         !       vf = 0
+         !    end if
 
-            !bx = shiftr(bx,24)
-            !by = shiftr(by,24)
+         !    !write(*,'(A,B0.16,2X,B0.8)') "bx - by = ", bx - by, vx - vy
+         !    vx = vx - vy
 
-            write(*,'(A,B0.16,2X,B0.8)') "bx      = ", bx, vx
-            write(*,'(A,B0.16,2X,B0.8)') "by      = ", by, vy
+         ! end block
+         !call op8xy5(Vx,Vy,Vf)
+         !print '(A,2X,I0,2X,I0)', "after = ", Vx, Vf
+         borrow = as_uint(Vx) >= as_uint(Vy)
 
-            if (bx > by) then
-               vf = 1
-            else
-               vf = 0
-            end if
+         print *, "Vx = ", as_uint(Vx)
+         print *, "Vy = ", as_uint(Vy)
+         print '(A,Z4,2X,Z4)', "SUB vx, vy = ", Vx - vY, as_uint(Vx) - as_uint(Vy)
 
-            write(*,'(A,B0.16,2X,B0.8)') "bx - by = ", bx - by, vx - vy
-            vx = vx + (-vy)
+         Vx = Vx - Vy
 
-         end block
-
-         print '(A,2X,I0,2X,I0)', "after = ", Vx, Vf
-      case(I8(z'6'))
-         
-         write(11,'(A,I0,2X,I0)') "Before = ", Vx, Vf
-         ! 8XY6: SHR Vx
-         VF = iand(Vx,I8(b'00000001'))
-         Vx = shiftr(Vx,1_Int8)
-
-         write(11,'(A,I0,2X,I0)') "After  = ", Vx, Vf
-         flush(11)
-
-      case(I8(z'7'))
-         ! 8XY7: SUBN Vx Vy
-         if (Vy > Vx) then
+         if (borrow) then
             VF = 1
          else
             VF = 0
          end if
+
+      case(I8(z'6'))
+         ! 8XY6: SHR Vx, Vy
+         !Vx = Vy
+         Vx = shiftr(Vy,1_Int8)
+         VF = iand(Vy,I8(b'00000001'))
+      case(I8(z'7'))
+         ! 8XY7: SUBN Vx Vy
+         borrow = as_uint(Vy) >= as_uint(Vx)
          Vx = Vy - Vx
+         if (borrow) then
+            VF = 1
+         else
+            VF = 0
+         end if
       case(I8(z'E'))
-         ! 8XYE
-         VF = iand(shiftr(Vx,7_Int8),I8(z'1'))
-         Vx = shiftl(Vx,1_Int8)
+         ! 8XYE: SHL Vx, Vy
+         !Vx = Vy
+         Vx = shiftl(Vy,1_Int8)
+         VF = iand(shiftr(Vy,7_Int8),I8(b'00000001'))
       case default
          call unknown_opcode(8_Int16)
       end select
@@ -491,8 +555,32 @@ contains
 
    subroutine wait_for_keypress(keypad)
       logical, intent(inout) :: keypad(0:15)
+      integer :: key
+                                            !   ProCall          Hex  Keyboard
+      integer, parameter :: keymap(0:15) = [  INT(z'78'), &    !  0      x
+                                              INT(z'31'), &    !  1      1
+                                              INT(z'32'), &    !  2      2
+                                              INT(z'33'), &    !  3      3
+                                              INT(z'71'), &    !  4      q
+                                              INT(z'77'), &    !  5      w
+                                              INT(z'65'), &    !  6      e
+                                              INT(z'61'), &    !  7      a
+                                              INT(z'73'), &    !  8      s
+                                              INT(z'64'), &    !  9      d
+                                              INT(z'79'), &    !  A      y
+                                              INT(z'63'), &    !  B      c
+                                              INT(z'34'), &    !  C      4
+                                              INT(z'72'), &    !  D      r
+                                              INT(z'66'), &    !  E      f
+                                              INT(z'76')]      !  F      v
+      do
+        call ggetch(key)
+        if (any(key == keymap)) then
+          where(key == keymap) keypad = .true.
+          return
+        endif
+      end do
 
-      error stop
    end subroutine
 
     ! subroutine tick()
@@ -521,14 +609,15 @@ contains
    ! are flipped from set to unset when the sprite is drawn, and to 0 if
    ! that doesn't happen.
    !
-   subroutine draw_sprite(vx,vy,n,win)
+   subroutine draw_sprite(vx,vy,n,win,collision)
       integer(int8), intent(in) :: vx, vy, n
       integer, intent(in) :: win
+      logical, intent(out) :: collision
 
       logical :: sprite(0:n-1,0:7), collide
       integer :: row, col, sx, sy, zx, zy 
 
-      v(15) = 0 
+      collision = .false.
 
       do col = 0, 7
          do row = 0, n-1
@@ -543,16 +632,19 @@ contains
             zx = vx + col
             zy = vy + row
 
+            ! TODO: handle negative vx and vy
             zx = mod(zx,64)
             zy = mod(zy,32)
 
             collide = sprite(row,col) .eqv. screen(zx,zy)
             if (screen(zx,zy)) then
-              if (collide) v(15) = 1
+              if (collide) collision = .true.
             end if
             screen(zx,zy) = .not. collide
          end do
       end do
+
+      call flush_screen(win)
 
    end subroutine
 
@@ -578,7 +670,7 @@ contains
       end do
 
      call copylayer(win,1,0)
-     call msleep(10)
+     call msleep(100)
 
    end subroutine
 
@@ -640,6 +732,8 @@ program main
     
     call layer(win,0,1)
     call gsetbgcolor(win, BG_COLOR)         ! Set background colour.
+
+    call gsetnonblock(0)
 
     open(11,file="debug.txt")
 

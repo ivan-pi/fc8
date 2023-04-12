@@ -1,7 +1,7 @@
 
 
-FC=gfortran
-CC=gcc
+FC=gfortran-10
+CC=gcc-10
 
 PREFIX = /usr/local
 EGGX_PATH=$(PREFIX)/lib
