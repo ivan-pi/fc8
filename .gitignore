@@ -34,3 +34,6 @@
 # CHIP8 cartridges/ROMS
 *.bin
 *.rom
+
+# Folders
+/build
