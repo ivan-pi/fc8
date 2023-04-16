@@ -40,6 +40,8 @@ The following cache variables may also be set:
 
 include(FindPackageHandleStandardArgs)
 
+find_package(X11 REQUIRED)
+
 find_path(EggX_INCLUDE_DIR eggxlib.h
     HINTS /usr/local/include
     REQUIRED)
@@ -48,10 +50,8 @@ find_library(EggX_LIBRARY eggx
     HINTS /usr/local/lib
     REQUIRED)
 
-#find_library(X11_LIBRARY X11
-#    HINTS /usr/local/lib
-#    REQUIRED)
-
+# For now, we extract the version number from the EggX header file.
+#
 # /*
 #  EGGX / ProCALL  version 0.95
 #                        eggx.h
@@ -83,8 +83,6 @@ find_package_handle_standard_args(EggX
         EggX_LIBRARY 
         EggX_INCLUDE_DIR
     VERSION_VAR EggX_VERSION)
-
-find_package(X11 REQUIRED)
 
 if(EggX_FOUND)
     set(EggX_LIBRARIES "${EggX_LIBRARY};${X11_LIBRARIES}")
