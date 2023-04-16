@@ -4,14 +4,6 @@ FindEggX
 
 Finds the EggX library.
 
-Imported Targets
-^^^^^^^^^^^^^^^^
-
-This module provides the following imported targets, if found:
-
-``EggX::EggX``
-  The EggX/ProCALL library
-
 Result Variables
 ^^^^^^^^^^^^^^^^
 
@@ -50,11 +42,12 @@ find_library(EggX_LIBRARY eggx
     HINTS /usr/local/lib
     REQUIRED)
 
-# For now, we extract the version number from the EggX header file.
+# For now, we extract the version number from the EggX header file
+# which contains the following comment:
 #
-# /*
+#/*
 #  EGGX / ProCALL  version 0.95
-#                        eggx.h
+#                     eggxlib.h
 # */
 if (EggX_INCLUDE_DIR)
     file(STRINGS "${EggX_INCLUDE_DIR}/eggxlib.h" header-file
@@ -73,10 +66,7 @@ if (EggX_INCLUDE_DIR)
         EggX_VERSION_MINOR 
         ${header-file})
     set(EggX_VERSION "${EggX_VERSION_MAJOR}.${EggX_VERSION_MINOR}" CACHE STRING "EggX Version")
-    #message(STATUS "version major: " ${EggX_VERSION_MAJOR})
-    #message(STATUS "version minor: " ${EggX_VERSION_MINOR})
 endif()
-
 
 find_package_handle_standard_args(EggX
     REQUIRED_VARS 
@@ -88,24 +78,3 @@ if(EggX_FOUND)
     set(EggX_LIBRARIES "${EggX_LIBRARY};${X11_LIBRARIES}")
     set(EggX_INCLUDE_DIRS ${EggX_INCLUDE_DIR})
 endif()
-
-# if (EggX_FOUND)
-#     mark_as_advanced(EggX_INCLUDE_DIR)
-#     mark_as_advanced(EggX_LIBRARY)
-#     mark_as_advanced(EggX_VERSION)
-# endif()
-
-# if (EggX_FOUND AND NOT TARGET EggX::EggX)
-#     add_library(EggX::EggX UNKNOWN IMPORTED)
-#     set_property(TARGET EggX::EggX PROPERTY IMPORTED_LOCATION ${EggX_LIBRARY})
-#     set_property(TARGET EggX::EggX PROPERTY VERSION ${EggX_VERSION})
-#     target_include_directories(EggX::EggX INTERFACE ${EggX_INCLUDE_DIR})
-
-#     # ToDo: Fix Handling of X11 library
-#     target_link_libraries(EggX::EggX INTERFACE -lX11)
-# endif()
-
-message(STATUS "EggX_FOUND:        ${EggX_FOUND}" )
-message(STATUS "EggX_VERSION:      ${EggX_VERSION}" )
-message(STATUS "EggX_LIBRARIES:    ${EggX_LIBRARIES}" )
-message(STATUS "EggX_INCLUDE_DIRS: ${EggX_INCLUDE_DIRS}" )
