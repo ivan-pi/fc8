@@ -37,11 +37,11 @@ sss:
 sds:
     LD I, 0x2A0         ; SSS:      3 byte work area
     LD B, V1            ;
-    LD I, 0x2A1         ;           Least significant digit
+    LD I, 0x2A1         ;           Middle digit
     LD V0, [I]          ;
     LD F, V0            ;
     DRW V3, V4, 5       ;
-    LD I, 0x2A2
+    LD I, 0x2A2         ;           Least significant digit
     LD V0, [I]
     LD F, V0
     ADD V3, 5
