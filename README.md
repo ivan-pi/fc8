@@ -98,7 +98,6 @@ Larger collection of games and other demos can be found in:
 * [Win32 (Windows)](https://learn.microsoft.com/en-us/windows/win32/)
 * [AppKit (MacOS)](https://developer.apple.com/documentation/appkit?language=objc)
 
-
 One of my aims in this project was to investigate design patterns. One of the 
 typical design problems in game development (or graphical programs in general)
 is how to support different graphical engines on different platforms.
@@ -120,6 +119,9 @@ The `hexdump` tool can be used to quickly inspect a cartridge (watch out as diff
 ## CHIP8 Assemblers
 
 A far better developer experience is to use a high-level assembler. The most famous one today is [Octo](http://johnearnest.github.io/Octo/), which also includes a disassembler and emulator, as well as a sprite editor. A second alternative is [Dorito](https://github.com/lesharris/dorito).
+
+Other assemblers:
+- [c8c](https://github.com/glouw/c8c)
 
 ## Other resources
 
