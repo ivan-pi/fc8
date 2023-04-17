@@ -89,12 +89,15 @@ Larger collection of games and other demos can be found in:
 
 ## Graphics and keyboard input
 
-* EggX/PROCALL: https://www.ir.isas.jaxa.jp/~cyamauch/eggx_procall/
+* [EGGX/ProCALL](https://www.ir.isas.jaxa.jp/~cyamauch/eggx_procall/)
+* [SDL](https://github.com/libsdl-org/SDL) and [fortran-sdl2](https://cyber.dabamos.de/programming/modernfortran/sdl.html)
+* [GLUT/OpenGL](https://www.opengl.org/resources/libraries/glut/spec3/spec3.html)
+* [GTK](https://www.gtk.org/) and [gtk-fortran](https://github.com/vmagnin/gtk-fortran)
+* [X11](https://www.x.org/wiki/) or [XCB](https://xcb.freedesktop.org/)
+* [Wayland](https://wayland.freedesktop.org/)
+* [Win32 (Windows)](https://learn.microsoft.com/en-us/windows/win32/)
+* [AppKit (MacOS)](https://developer.apple.com/documentation/appkit?language=objc)
 
-* SDL 1.2
-* SDL 2.0
-* SDL 3.0
-* OpenGL/GLUT: https://www.opengl.org/resources/libraries/glut/spec3/spec3.html
 
 One of my aims in this project was to investigate design patterns. One of the 
 typical design problems in game development (or graphical programs in general)
