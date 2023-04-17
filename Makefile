@@ -20,36 +20,16 @@ LDLIBS=$(EGGX2003_LIB) $(EGGX_LIB) -lX11
 
 .PHONY: all
 
-all: chip8
+all: FC8
 
-chip8: chip8.F90 randint8.o
+FC8: src/FC8_vm.F90 src/FC8.F90 src/randint8.o
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-randint8.o: randint8.c
+src/randint8.o: src/randint8.c
 	$(CC) $(CFLAGS) -c -o $@ $<
-
-op8xy5.o: op8xy5.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-
-test_ggetch: test_ggetch.f90
-	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
-
-
-xprog: xprog-2.cc
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -lX11
-
-xcb_main: xcb_main.c
-	$(CC) -I$(PREFIX)/include -L$(PREFIX)/lib $(CFLAGS) -o $@ $< -lxcb
-
-fcw_main: fcw_main.f90 fc8_win.o
-	$(FC) $(FFLAGS) -L$(PREFIX)/lib -o $@ $^ -lxcb
-
-fc8_win.o: fc8_win.c
-	$(CC) -I$(PREFIX)/include $(CFLAGS) -c $<
 
 .PHONY: clean
 clean:
 	rm -f *.mod *.o
-	rm -f chip8
+	rm -f FC8
 

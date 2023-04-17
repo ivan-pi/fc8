@@ -10,8 +10,12 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(EGGX 0.95 REQUIRED)
 
-add_library(eggx-procall-2003 OBJECT procall.f90)
+add_library(eggx-procall-2003 OBJECT src/procall.f90)
 target_link_libraries(eggx-procall-2003 PUBLIC ${EGGX_LIBRARIES})
 
-add_executable(fc8 chip8.F90 randint8.c)
+add_executable(fc8 
+    src/FC8.f90 
+    src/FC8_vm.F90
+    src/randint8.c
+    )
 target_link_libraries(fc8 eggx-procall-2003)
