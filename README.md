@@ -10,6 +10,7 @@ Clone the repository and build using CMake:
 $ git clone
 $ mkdir build && cd build
 $ cmake ..
+$ make
 ```
 
 ### Installing EGGX/ProCALL
@@ -40,9 +41,9 @@ Note that EGGX/ProCALL requires a working X11/Xlib library. On Ubuntu you can in
 
 ## Examples
 
-A few example ROMs can be bound in the `cartridges/` directory. ROMS/cartridges can be specified at the command line:
+A few example ROMs can be bound in the `cartridges/` directory. ROMS/cartridges can be loaded at the command line:
 ```
-$ ./fc8 <cartridge>
+$ ./FC8 <cartridge>
 ```
 
 ## Tests
