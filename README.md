@@ -39,6 +39,12 @@ $ cmake .. -DEGGX_DIR=<custom directory>
 
 Note that EGGX/ProCALL requires a working X11/Xlib library. On Ubuntu you can install it using `sudo apt-get install libx11-dev`. On Mac you'll probably need to install the [XQuartz](https://www.xquartz.org/) package.
 
+Since FC8 uses the X11 window library (via EGGX/ProCALL), you can run the interpreter on a remote machine using X-forwarding. To do so you must have a running X-server (e.g. Xming on Windows, XQuartz on Mac). After logging in with
+```
+$ ssh -Y <userID>@<destination>
+```
+you should be able to run FC8 remotely, including the communication and forwarding of key-presses.
+
 ## Examples
 
 A few example ROMs can be bound in the `cartridges/` directory. ROMS/cartridges can be loaded at the command line:
@@ -98,4 +104,12 @@ A far better developer experience is to use a high-level assembler. The most fam
 
 ## Other resources
 
-* [Emulator 101: Introduction to CHIP-8](http://www.emulator101.com/introduction-to-chip-8.html)
+* [How to write an emulator (CHIP-8 interpreter) | Laurence Muller](https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/)
+* [Introduction to CHIP-8 | Emulator 101](http://www.emulator101.com/introduction-to-chip-8.html)
+* [CHIP-8 Technical Reference](https://github.com/mattmikolay/chip-8/wiki/CHIP%E2%80%908-Technical-Reference)
+* [Emulating the Chip8 system | codeslinger.co.uk](http://www.codeslinger.co.uk/pages/projects/chip8.html)
+* [Chip-8 on the COSMAC VIP: Keyboard Input | Laurence Scotford](https://laurencescotford.com/chip-8-on-the-cosmac-vip-keyboard-input/)
+* [CHIP-8 Reference | Gulrak's CHIP8 Cave](https://chip8.gulrak.net/reference/)
+* [Guide to making a CHIP-8 emulator | Tobias V. Langhoff](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/)
+* [How are held-down keys handled in CHIP-8? | Retrocomputing](https://retrocomputing.stackexchange.com/questions/358/how-are-held-down-keys-handled-in-chip-8)
+* [BUILDING A CHIP-8 EMULATOR [C++] | Austin Morlan](https://austinmorlan.com/posts/chip8_emulator/#16-input-keys)
