@@ -2,15 +2,30 @@
 
 Fortran CHIP-8 interpreter
 
-## Build instructions
+## Building FC8
 
-Clone the repository and build using CMake:
+### Prerequisites
 
+The following tools and libraries are required:
+
+* Fortran 2008 compiler such as `gfortran` or `ifx`
+* C compiler
+* CMake v3.15 or higher, and/or Make
+* [EGGX/ProCALL graphics library](#installing-eggxprocall)
+* Xlib (or libX11); the X window system client library
+
+### Build steps
+
+Clone the repository and build using CMake
 ```txt
 $ git clone
 $ mkdir build && cd build
 $ cmake ..
 $ make
+```
+If everything worked, you should now be able to play a CHIP-8 game using:
+```
+$ ./FC8 <path/to/cartridge>
 ```
 
 ### Installing EGGX/ProCALL
