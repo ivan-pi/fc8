@@ -18,7 +18,10 @@ private
 public :: int8, int16
 public :: loadgame, memory
 public :: initmem, vexec
-public :: timers
+public :: timers, get_keypad
+public :: check_keys, keypad
+public :: get_keypad_v2
+public :: srand
 
 integer(int8) :: memory(0:4095) = 0
 integer(int8) :: V(0:15) = 0
@@ -32,15 +35,6 @@ integer(int16) :: stack(16) = 0
 integer :: delay_timer = 0
 integer :: sound_timer = 0
 
-logical :: keypad(0:15) = .false.
-
-interface
-   function rand() bind(c,name="randint8")
-      use, intrinsic :: iso_c_binding, only: c_int8_t
-      integer(c_int8_t) :: rand
-   end function
-end interface
-
 !> Screen buffer (black and white pixels)
 !> TODO: Should this be flipped 32 rows by 64 columns?
 logical :: screen(0:63,0:31) = .false.
@@ -51,7 +45,87 @@ integer :: fontidx(0:15)
 !> The height of the font; corresponds to the number of bytes to be drawn.
 integer, parameter :: FONT_HEIGHT = 5
 
+                                      !   ProCall          Hex  Keyboard
+integer, parameter :: keymap(0:15) = [  INT(z'78'), &    !  0      x
+                                        INT(z'31'), &    !  1      1
+                                        INT(z'32'), &    !  2      2
+                                        INT(z'33'), &    !  3      3
+                                        INT(z'71'), &    !  4      q
+                                        INT(z'77'), &    !  5      w
+                                        INT(z'65'), &    !  6      e
+                                        INT(z'61'), &    !  7      a
+                                        INT(z'73'), &    !  8      s
+                                        INT(z'64'), &    !  9      d
+                                        INT(z'79'), &    !  A      y
+                                        INT(z'63'), &    !  B      c
+                                        INT(z'34'), &    !  C      4
+                                        INT(z'72'), &    !  D      r
+                                        INT(z'66'), &    !  E      f
+                                        INT(z'76')]      !  F      v
+
+logical, protected :: check_keys = .false.
+logical, protected :: keypad(0:15) = .false.
+
+! Convenience wrappers of the C stdlib rand() function
+interface
+   ! Generate a random 8-bit integer
+   function rand_byte() bind(c,name="rand_byte")
+      use, intrinsic :: iso_c_binding, only: c_int8_t
+      integer(c_int8_t) :: rand_byte
+   end function
+   ! Generate a random 8-bit integer and perform a bitwise AND with the mask kk
+   function rand_byte_masked(kk) bind(c,name="rand_byte_masked")
+      use, intrinsic :: iso_c_binding, only: c_int8_t
+      integer(c_int8_t), intent(in), value :: kk
+      integer(c_int8_t) :: rand_byte_masked
+   end function
+   ! Seed the pseudo-random number generator
+   ! If rand_byte() or rand_byte_masked() are used before any calls to srand(),
+   ! the functions behave as if they were seeded with srand(1).
+   subroutine srand(seed) bind(c,name="srand")
+      use, intrinsic :: iso_c_binding, only: c_int
+      integer(c_int), intent(in), value :: seed
+   end subroutine
+end interface
+
 contains
+
+   subroutine get_keypad_v2(last_pressed)
+      integer, intent(in) :: last_pressed(0:15)
+      integer :: i, which
+      keypad = .false.
+      do i = 0, 15
+         if (last_pressed(i) /= -1) then
+            which = findloc(keymap,last_pressed(i),dim=1)
+            if (which > 0) then
+               keypad(which-1) = .true.
+            end if
+         end if
+      end do
+   end subroutine
+
+   subroutine get_keypad(esc, key)
+      logical, intent(out) :: esc
+      integer, intent(out) :: key
+      integer :: i, which
+
+      esc = .false.
+      keypad = .false.
+
+      ! Up to 16 keys can be pressed simultaneously
+      do i = 1, 16
+         call ggetch(key)
+         if (key == int(z'1b')) then
+            esc = .true.
+            return
+         end if
+         which = findloc(keymap,key,dim=1)
+         if (which > 0) then
+            keypad(which-1) = .true.
+         end if
+         call msleep(1)
+      end do
+   end subroutine
 
     subroutine initmem()
 
@@ -136,7 +210,6 @@ contains
         character(len=*), intent(in) :: game
 
         integer :: i, stat, game_unit
-        integer(int8) :: b1, b2
 
         open(newunit=game_unit, &
              file=game, &
@@ -153,7 +226,7 @@ contains
         do
             read(game_unit,iostat=stat) memory(i:i+1)
             if (is_iostat_end(stat)) exit
-            print '(I4,2X,Z4,2X,2Z2)', i - 512, i, memory(i:i+1)
+            print '(I4,2X,Z0.4,2X,2Z0.2)', i - 512, i, memory(i:i+1)
             i = i + 2
 
             if (i > 4095) then
@@ -204,8 +277,10 @@ contains
       ready = iand(op8(1),I8(b'00001111'))
    end function
 
-   subroutine vexec(win)
+   subroutine vexec(win,key,want_key)
       integer, intent(inout) :: win
+      integer, intent(in) :: key
+      logical, intent(inout) :: want_key
 
       integer(int16) :: opcode
 
@@ -219,9 +294,9 @@ contains
       character(len=4) :: vxstr
 
       opcode = fetch_opcode()
-
+#if DEBUG
       print '("PC: ",Z4," opcode: ",Z0.4)', pc, opcode
-
+#endif
       x = readx(opcode) ! A value from 0 to F
       y = ready(opcode) ! A value from 0 to F
 
@@ -233,12 +308,12 @@ contains
       case(int(z'0000',int16))
          select case(kk)
          case (CLS_)
-            print *, "Clear the screen"
+            !print *, "Clear the screen"
             screen = .false.
             call clear_window(win)
             pc = pc + 2
          case (RET_)
-            print *, "Return from subroutine"
+            !print *, "Return from subroutine"
             sp = sp - 1
             pc = stack(sp)
          case default
@@ -247,7 +322,7 @@ contains
          end select
       case(int(z'1000',int16)) ! 1nnn: jump to address nnn
 
-         print '(A,Z4)', "Jump to address ", nnn
+         !print '(A,Z4)', "Jump to address ", nnn
          pc = nnn
          !print '(A,Z4,A,I0)', "jumping to address (hex) ", nnn, " (dec) ", nnn
 
@@ -262,11 +337,8 @@ contains
                 pc = pc + 2
             end if
       case(int(z'4000',int16)) ! 4xkk: skip next instr if V(x) /= kk
-            print '("Skip next instruction if v[",I0,"] = ",Z4," /= ",Z4)', x, V(x), kk
+            !print '("Skip next instruction if v[",I0,"] = ",Z4," /= ",Z4)', x, V(x), kk
             if (as_uint(V(x)) /= kk) then
-               print '(B16)', V(x)
-               print '(B16)', kk
-               print *, "Result = .true. (V(x) /= kk)"
                 pc = pc + 4
             else
                 pc = pc + 2
@@ -278,11 +350,11 @@ contains
                pc = pc + 2
             end if
       case(int(z'6000',int16)) ! 6xkk; set V(x) = kk
-            print '("Set v[",Z4,"] = ",Z4)', x, kk
+            !print '("Set v[",Z4,"] = ",Z4)', x, kk
             v(x) = I8(kk)
             pc = pc + 2
       case(int(z'7000',int16)) ! 7xkk; set V(x) = V(x) + kk
-            print '("Set v[",Z4,"] += ",Z4)', x, kk
+            !print '("Set v[",Z4,"] += ",Z4)', x, kk
             v(x) = v(x) + I8(kk)
             pc = pc + 2
       case(I16(z'8000'))
@@ -302,18 +374,19 @@ contains
             pc = pc + 2
          end if
       case(int(z'A000',int16)) ! Annn: set I to address nnn
-         write(*,'(A,Z4)') "Set I to ", nnn
+         !write(*,'(A,Z4)') "Set I to ", nnn
          I = nnn
          pc = pc + 2
       case(int(z'B000',int16)) ! Bnnn: jump to location nnn + V(0)
          pc = nnn + as_uint(V(0))
          !pc = nnn + V(0)
       case(int(z'C000',int16)) ! Cxkk: V(x) = random byte AND kk
-         V(x) = iand(rand(),I8(kk))
+         V(x) = rand_byte_masked(I8(kk))
+         !V(x) = iand(rand_byte(),I8(kk))
          pc = pc + 2
       case(int(z'D000',int16)) ! Dxyn: display an n-byte sprite starting at memory
                                  !       location I at (Vx, Vy) on the screen, VF = collision
-         print '(A,Z4,2X,Z4,A,I2)', "Draw sprite at ",v(x),v(y)," of height ", n
+         !print '(A,Z4,2X,Z4,A,I2)', "Draw sprite at ",v(x),v(y)," of height ", n
          call draw_sprite(v(x),v(y),n,win,collision)
          if (collision) then
             v(15) = 1
@@ -323,35 +396,40 @@ contains
 
          pc = pc + 2
       case(I16(z'E000'))
-         select case(kk)
-         case(I16(z'009E'))
-           ! TODO: Check VX range in 0-15
-           if (keypad(V(x))) then
-              pc = pc + 4
-           else
-              pc = pc + 2
-           end if
-         case(I16(z'00A1'))
-           ! TODO: Check VX range in 0-15
-           if (.not. keypad(V(x))) then
-              pc = pc + 4
-           else
-              pc = pc + 2
-           end if
-         case default
-          print *, "IMPOSSIBLE"
-           call unknown_opcode(opcode)
-         end select
+         if (want_key) then   
+            select case(kk)
+            case(I16(z'009E'))
+               if (is_key_pressed(key,V(x))) then
+                  pc = pc + 4
+               else
+                  pc = pc + 2
+               end if
+            case(I16(z'00A1'))
+               if (.not. is_key_pressed(key,V(x))) then
+                  pc = pc + 4
+               else
+                  pc = pc + 2
+               end if
+            case default
+              call unknown_opcode(opcode)
+            end select
+            want_key = .false.
+         else
+            ! Return to event loop to get keypad state
+            ! The program counter is stalled at the current instruction
+            want_key = .true.
+         end if
       case(I16(z'F000')) ! F...
          select case(kk)
          case(I16(z'07'))
             V(x) = I8(delay_timer)
             pc = pc + 2
          case(I16(z'0A'))
-            call wait_for_keypress(keypad)
-            V(x) = findloc(keypad,.true.,1) - 1
-            print *, "FX0A V(x) = ", V(x)
-            pc = pc + 2
+            if (wait_for_keypress(key,V(x))) then
+                  ! Don't advance program counter 
+                  ! until we receive a key-press
+               pc = pc + 2
+            end if
          case(I16(z'15'))
             delay_timer = as_uint(V(x))
             pc = pc + 2
@@ -480,36 +558,56 @@ contains
 
    end subroutine
 
-   subroutine wait_for_keypress(keypad)
-      logical, intent(inout) :: keypad(0:15)
+   logical function wait_for_keypress(key,Vx)
+      integer, intent(in) :: key
+      integer(int8), intent(inout) :: Vx
+
+      integer(int8) :: which_key
+      wait_for_keypress = .false.
+#if 1
+      if (key >= 0) then
+         ! Findloc returns a 1-based index, irrespective of any
+         ! custom upper and lower bounds.
+         which_key = findloc(keymap,key,dim=1,kind=int8)
+         if (which_key > 0) then 
+            wait_for_keypress = .true.
+            Vx = which_key - 1_int8
+            return
+         end if
+      end if
+#else
+      if (any(keypad)) then
+         which_key = findloc(keypad,.true.,dim=1,kind=int8)
+         if (which_key > 0) then 
+            wait_for_keypress = .true.
+            Vx = which_key - 1_int8
+            return
+         end if
+      endif
+#endif
+   end function
+
+   logical function is_key_pressed(key,Vx)
       integer :: key
-                                            !   ProCall          Hex  Keyboard
-      integer, parameter :: keymap(0:15) = [  INT(z'78'), &    !  0      x
-                                              INT(z'31'), &    !  1      1
-                                              INT(z'32'), &    !  2      2
-                                              INT(z'33'), &    !  3      3
-                                              INT(z'71'), &    !  4      q
-                                              INT(z'77'), &    !  5      w
-                                              INT(z'65'), &    !  6      e
-                                              INT(z'61'), &    !  7      a
-                                              INT(z'73'), &    !  8      s
-                                              INT(z'64'), &    !  9      d
-                                              INT(z'79'), &    !  A      y
-                                              INT(z'63'), &    !  B      c
-                                              INT(z'34'), &    !  C      4
-                                              INT(z'72'), &    !  D      r
-                                              INT(z'66'), &    !  E      f
-                                              INT(z'76')]      !  F      v
-      do
-        call ggetch(key)
-        if (any(key == keymap)) then
-          where(key == keymap) keypad = .true.
-          return
-        endif
-      end do
+      integer(int8), value :: Vx
+#if 0
+      is_key_pressed = .false.
+      if (key < 0) return
+      ! Keep only the 4 most significant bits for safety
+      Vx = iand(Vx,I8(z'0F'))
+      is_key_pressed = key == keymap(Vx)
+#else
+      Vx = iand(Vx,I8(z'0F'))
+      is_key_pressed = keypad(Vx)
+#endif
+   end function
 
-   end subroutine
-
+   ! This subroutine should run at 60 Hz, i.e. it should be
+   ! called once every 1/60 of a second, also known as a third.
+   !
+   ! For an etmylogical discussion on thirds see:
+   !   https://english.stackexchange.com/questions/51860/is-there-a-word-for-a-60th-of-a-second
+   !
    subroutine timers()
       if (delay_timer > 0) delay_timer = delay_timer - 1
     !     if (sound_timer > 0) then
@@ -540,7 +638,7 @@ contains
       logical, intent(out) :: collision
 
       logical :: sprite(0:n-1,0:7), collide
-      integer :: row, col, sx, sy, zx, zy 
+      integer :: row, col, zx, zy 
 
       collision = .false.
 
@@ -597,13 +695,11 @@ contains
       end do
 
      call copylayer(win,1,0)
-     call msleep(5)
+     call msleep(1)
 
    end subroutine
 
 end module
-
-
 
 
 program main
@@ -624,14 +720,15 @@ program main
     integer,          parameter :: WIN_HEIGHT = 32 * MF
     integer,          parameter :: MAX_ITER   = 256
 
-    integer :: key, win
+    integer :: win, key, k
+    integer, parameter :: ESCAPE_KEY = int(z'1b')
 
     character(len=256) :: filename
-    integer :: nargs, rom_unit, byte
-    integer(int16) :: inst
-    logical :: rom_exists
+    integer :: nargs
+    logical :: rom_exists, esc, want_key
 
     integer(8) :: delta, tprev, tcurr, trate, tstep
+    integer :: last_pressed(16), seed
 
     call initmem()
 
@@ -642,6 +739,9 @@ program main
         print *, "   chip8 <filename>"
         stop
     end if
+
+    seed = 1
+    call srand(seed)
 
     call get_command_argument(1,filename)
     print *, filename
@@ -662,24 +762,67 @@ program main
     call layer(win,0,1)
     call gsetbgcolor(win, BG_COLOR)         ! Set background colour.
 
-    call gsetnonblock(0)
+    call gsetnonblock(1)
 
    call system_clock(tprev,trate)
    tstep = nint(trate/60.d0)
    !print *, "tstep = ", tstep
 
-   do
-      call vexec(win)
+   key = -1 ! No key press
+   want_key = .false.
+   last_pressed = -1
 
-      call system_clock(tcurr)
-      delta = tcurr - tprev
-      if (delta > tstep) then
-         call timers()
-         tprev = tcurr
+   ! Key-handling loop
+   do
+
+      call vexec(win,key,want_key)
+
+      call ggetch(key)
+      last_pressed = eoshift(last_pressed,1,boundary=key)
+      if (key == ESCAPE_KEY) exit
+
+      timing: block
+         call system_clock(tcurr)
+         delta = tcurr - tprev
+         if (delta > tstep) then
+            !print *, "                delta = ", delta
+            call timers()
+            tprev = tcurr
+            end if
+      end block timing
+
+      if (want_key) then
+         write(*,'(A,*(L1))')    "Keypad:   ", keypad
+         write(*,'(A,*(1X,I4))') "Want key: ", last_pressed
+         do k = 1, 4
+            call ggetch(key)
+            call msleep(2)
+            last_pressed = eoshift(last_pressed,1,boundary=key)
+         end do
       end if
 
+      call get_keypad_v2(last_pressed)
+      
    end do
 
    call gcloseall()
+
+
+contains
+
+   ! https://cyber.dabamos.de/programming/modernfortran/random-numbers.html
+   function urandom_seed(n, stat) result(seed)
+      !! Returns a seed array filled with random values from `/dev/urandom`.
+      integer, intent(in)            :: n
+      integer, intent(out), optional :: stat
+      integer                        :: seed(n)
+      integer                        :: fu, rc
+
+      open (access='stream', action='read', file='/dev/urandom', &
+            form='unformatted', iostat=rc, newunit=fu)
+      if (present(stat)) stat = rc
+      if (rc == 0) read (fu) seed
+      close (fu)
+   end function urandom_seed
 
 end program main

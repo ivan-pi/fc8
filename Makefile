@@ -22,19 +22,14 @@ LDLIBS=$(EGGX2003_LIB) $(EGGX_LIB) -lX11
 
 all: chip8
 
-chip8: chip8.F90 randint8.o
+chip8: chip8.F90 rand_byte.o
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-randint8.o: randint8.c
+rand_byte.o: rand_byte.c
 	$(CC) $(CFLAGS) -c -o $@ $<
-
-op8xy5.o: op8xy5.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
 
 test_ggetch: test_ggetch.f90
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
-
 
 xprog: xprog-2.cc
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -lX11
