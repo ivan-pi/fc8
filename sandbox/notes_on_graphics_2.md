@@ -4,6 +4,7 @@
 * [nuklear](https://github.com/vurtun/nuklear)
 * [FLTK](https://www.fltk.org/)
 * [SFML](https://www.sfml-dev.org/index.php)
+* [Boost.UI](https://kosenko.github.io/boost.ui/)
 * [ImGui](https://github.com/ocornut/imgui)
 * [Winteracter](https://www.winteracter.com/)
 * [AppGraphics](http://simplyfortran.com/features/appgraphics)
@@ -18,6 +19,13 @@
 * [g2 graphical library](https://sourceforge.net/projects/g2gl/)
 * [grwin](http://spdg1.sci.shizuoka.ac.jp/grwin/en/)
 * [pilib](https://sourceforge.net/projects/pilib/)
+* [pygame](http://www.pygame.org/docs/)
+* [pyglet](https://pyglet.org/)
+* [pyopengl](https://pyopengl.sourceforge.net/)
+* [LOVE](https://love2d.org/)
+* [wren](https://wren.io/)
+* [Godot](https://godotengine.org/)
+* [libui](https://github.com/andlabs/libui)
 
 Misc:
 
@@ -28,6 +36,9 @@ Misc:
 * http://www.xeffort.com/index.html
 * SilverFrost FORTRAN + .NET Core?
 * [PureBasic](https://www.purebasic.com/)
+* https://learnopengl.com/Advanced-OpenGL/Framebuffers
+* https://llllllll.co/t/uxn-virtual-computer/46103/134?page=7
+* https://news.ycombinator.com/item?id=34936729
 
 ## Audio
 
