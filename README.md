@@ -31,13 +31,14 @@ To install EGGX to a custom directory use:
 ```
 $ make install PREFIX=<custom directory>
 ```
-
-If EGGX was installed at a custom location, you should communicate this to CMake at config time:
+If EGGX was installed at a custom location, you should communicate this to CMake at configuration time:
 ```
 $ cmake .. -DEGGX_DIR=<custom directory>
 ```
 
 Note that EGGX/ProCALL requires a working X11/Xlib library. On Ubuntu you can install it using `sudo apt-get install libx11-dev`. On Mac you'll probably need to install the [XQuartz](https://www.xquartz.org/) package.
+
+#### X-forwarding
 
 Since FC8 uses the X11 window library (via EGGX/ProCALL), you can run the interpreter on a remote machine using X-forwarding. To do so you must have a running X-server (e.g. Xming on Windows, XQuartz on Mac). After logging in with
 ```
