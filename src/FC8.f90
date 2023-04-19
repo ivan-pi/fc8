@@ -14,7 +14,6 @@ program FC8
 
     integer,          parameter :: WIN_WIDTH  = 64 * MF
     integer,          parameter :: WIN_HEIGHT = 32 * MF
-    integer,          parameter :: MAX_ITER   = 256
 
     integer :: win
 

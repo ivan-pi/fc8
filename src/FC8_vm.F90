@@ -4,9 +4,9 @@
 
 module FC8_vm
 
-use procall, only: clear_window => gclr, pset, copylayer, msleep
+use procall, only: clear_window => gclr, copylayer, msleep
 
-use, intrinsic :: iso_fortran_env, only: int8, int16, int32
+use, intrinsic :: iso_fortran_env, only: int8, int16
 implicit none
 private
 
@@ -676,6 +676,17 @@ contains
 
    end subroutine
 
+! Keypad             Keyboard
+! +-+-+-+-+          +-+-+-+-+
+! |1|2|3|C|          |1|2|3|4|
+! +-+-+-+-+          +-+-+-+-+
+! |4|5|6|D|          |Q|W|E|R|
+! +-+-+-+-+    =>    +-+-+-+-+
+! |7|8|9|E|          |A|S|D|F|
+! +-+-+-+-+          +-+-+-+-+
+! |A|0|B|F|          |Z|X|C|V|
+! +-+-+-+-+          +-+-+-+-+
+!
    subroutine wait_for_keypress(keypad)
       logical, intent(inout) :: keypad(0:15)
       integer :: key
@@ -708,12 +719,10 @@ contains
 
    subroutine timers()
       if (delay_timer > 0) delay_timer = delay_timer - 1_byte
-    !     if (sound_timer > 0) then
-    !         sound_timer = sound_timer - 1
-    !         if (sound_timer == 0) then
-    !             print *, "BEEP"
-    !         end if
-    !     end if
+      if (sound_timer > 0) then
+         sound_timer = sound_timer - 1_byte
+         ! TODO: make beep
+      end if
    end subroutine
 
 
@@ -783,7 +792,6 @@ contains
       external :: fillrect
 
       call clear_window(win)
-
 
       do zy = 0, 31
          do zx = 0, 63
