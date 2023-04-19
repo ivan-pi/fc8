@@ -2,14 +2,6 @@
 #define  BYTE(b)  int(b,byte)
 #define I16(byte) int(byte,int16)
 
-
-module FC8_int
-
-
-
-end module
-     
-
 module FC8_vm
 
 use procall, only: clear_window => gclr, pset, copylayer, msleep
@@ -142,15 +134,17 @@ end interface
 
 contains
 
-   pure function asuint_int16(x) result(y)
+   pure function asuint_int16(x,res) result(y)
       integer(byte), intent(in), value :: x
-      integer(int16) :: y
-      y = iand(transfer(x,y),int(z'FF',kind(y))
+      integer(int16), intent(in), value :: res
+      integer(kind(res)) :: y
+      y = iand(transfer(x,y),int(z'FF',kind(res)))
    end function
-   pure function asuint_default(x) result(y)
+   pure function asuint_default(x,res) result(y)
       integer(byte), intent(in), value :: x
-      integer(kind(0)) :: y
-      y = iand(transfer(x,y),int(z'FF',kind(y)))
+      integer(kind(0)), intent(in), value :: res
+      integer(kind(res)) :: y
+      y = iand(transfer(x,y),int(z'FF',kind(res)))
    end function
 
    pure function asaddr(x) result(y)
@@ -348,6 +342,7 @@ contains
       end if
    end subroutine
 
+   !> Virtual machine execution
    subroutine vexec(win)
       integer, intent(inout) :: win
 
@@ -625,6 +620,7 @@ contains
       integer(byte), parameter :: D8XYE = int(z'E',byte)
 
       logical :: borrow
+      integer(byte), parameter :: BIT0 = int(b'00000001',byte)
 
       select case ( int(n) )
       case( D8XY0 )
@@ -636,7 +632,7 @@ contains
       case( D8XY3 )
          Vx = ieor(Vx,Vy)
       case( D8XY4 )
-         borrow = (as_uint(vx) + as_uint(vy)) > 255_int16
+         borrow = (asuint(vx,0) + asuint(vy,0)) > 255
          Vx = Vx + Vy
          if (borrow) then
             VF = 1
@@ -644,7 +640,7 @@ contains
             VF = 0
          end if
       case( D8XY5 )
-         borrow = as_uint(Vx) >= as_uint(Vy)
+         borrow = asuint(Vx,0) >= asuint(Vy,0)
          Vx = Vx - Vy
          if (borrow) then
             VF = 1
@@ -654,11 +650,11 @@ contains
       case(  D8XY6 )
          ! 8XY6: SHR Vx, Vy
          !Vx = Vy
-         Vx = shiftr(Vy,1_Int8)
-         VF = iand(Vy,I8(b'00000001'))
+         Vx = shiftr(Vy,1)
+         VF = iand(Vy,BIT0)
       case( D8XY7 )
          ! 8XY7: SUBN Vx Vy
-         borrow = as_uint(Vy) >= as_uint(Vx)
+         borrow = asuint(Vy,0) >= asuint(Vx,0)
          Vx = Vy - Vx
          if (borrow) then
             VF = 1
@@ -668,10 +664,14 @@ contains
       case( D8XYE )
          ! 8XYE: SHL Vx, Vy
          !Vx = Vy
-         Vx = shiftl(Vy,1_Int8)
-         VF = iand(shiftr(Vy,7_Int8),I8(b'00000001'))
+         Vx = shiftl(Vy,1)
+         VF = iand(shiftr(Vy,7),BIT0)
       case default
-         call unknown_opcode(8_Int16)
+         block
+            integer(instr) :: op
+            op = fetch_opcode()
+            call unknown_opcode(op)
+         end block
       end select
 
    end subroutine
