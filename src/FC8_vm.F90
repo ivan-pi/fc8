@@ -780,8 +780,10 @@ contains
       integer :: zx, zy
       real :: wx, wy
       integer, parameter :: MF = 8
+      external :: fillrect
 
       call clear_window(win)
+
 
       do zy = 0, 31
          do zx = 0, 63

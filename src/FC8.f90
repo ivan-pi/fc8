@@ -24,6 +24,8 @@ program FC8
 
     integer(8) :: delta, tprev, tcurr, trate, tstep
 
+    external :: winname
+
     call initmem()
 
     nargs = command_argument_count()
