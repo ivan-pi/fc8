@@ -16,11 +16,10 @@ program FC8
     integer,          parameter :: WIN_HEIGHT = 32 * MF
     integer,          parameter :: MAX_ITER   = 256
 
-    integer :: key, win
+    integer :: win
 
     character(len=256) :: filename
-    integer :: nargs, rom_unit, byte
-    integer(int16) :: inst
+    integer :: nargs
     logical :: rom_exists
 
     integer(8) :: delta, tprev, tcurr, trate, tstep
