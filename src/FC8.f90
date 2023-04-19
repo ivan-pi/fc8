@@ -22,7 +22,8 @@ program FC8
     integer :: nargs
     logical :: rom_exists
 
-    integer(8) :: delta, tprev, tcurr, trate, tstep
+    integer, parameter :: prec = selected_int_kind(18)
+    integer(prec) :: delta, tprev, tcurr, trate, tstep
 
     external :: winname
 
