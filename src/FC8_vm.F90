@@ -1,7 +1,10 @@
-#define  I8(byte) int(byte,int8)
-#define  BYTE(b)  int(b,byte)
-#define I16(byte) int(byte,int16)
-
+!> FC8 virtual machine module
+!>
+!> This module contains the internals of the CHIP-8 interpreter or
+!> virtual machine. Currently there is some overlap with the graphics
+!> subroutines, which should be isolated/separated better in a future
+!> version.
+!>
 module FC8_vm
 
 use procall, only: clear_window => gclr, copylayer, msleep
@@ -513,7 +516,7 @@ contains
             pc = pc + 2
          case(DFX0A)
             call wait_for_keypress(keypad)
-            V(x) = findloc(keypad,.true.,1) - 1
+            V(x) = findloc(keypad,.true.,1,kind=byte) - 1_byte
             print *, "FX0A V(x) = ", V(x)
             pc = pc + 2
          case(DFX15)
