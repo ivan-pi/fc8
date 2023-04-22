@@ -79,6 +79,7 @@ To test the interpreter, I have used the ROM images found in the following third
 It's often insightful to compare results with interpreters of others. Here are just a few:
 - https://bluishcoder.co.nz/js8080/
 - https://chip8.iorel.nl/
+- https://greysonp.gitlab.io/chip8-js/
 
 (Note that many interpreters found on the internet are incomplete or misinterpret certain opcodes. In some cases, also the ROMs are broken or rely on implementation quirks.)
 
@@ -122,6 +123,9 @@ A far better developer experience is to use a high-level assembler. The most fam
 
 Other assemblers:
 - [c8c](https://github.com/glouw/c8c)
+- [c8asm](https://github.com/wernsey/chip8)
+- [Chip8Assembler](https://github.com/craigthomas/Chip8Assembler)
+- [asmchip8](https://pypi.org/project/asmchip8/)
 
 ## Other resources
 
@@ -134,3 +138,8 @@ Other assemblers:
 * [Guide to making a CHIP-8 emulator | Tobias V. Langhoff](https://tobiasvl.github.io/blog/write-a-chip-8-emulator/)
 * [How are held-down keys handled in CHIP-8? | Retrocomputing](https://retrocomputing.stackexchange.com/questions/358/how-are-held-down-keys-handled-in-chip-8)
 * [BUILDING A CHIP-8 EMULATOR [C++] | Austin Morlan](https://austinmorlan.com/posts/chip8_emulator/#16-input-keys)
+
+### Explore
+
+- [CHIP-8 (GitHub)](https://github.com/topics/chip8)
+- [CHIP-8 (GitLab)](https://gitlab.com/explore/projects/topics/CHIP-8)
