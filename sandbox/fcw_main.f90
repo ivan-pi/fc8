@@ -26,7 +26,7 @@ module fcw
         logical(c_bool) :: key(0:15)
     end type
 
-    type(keypad), bind(c,name="pad") :: pad
+    type(keypad), bind(c,name="pad"), protected :: fcw_pad
 
 end module
 
@@ -56,12 +56,12 @@ program fcw_main
         if (res == ESC) exit
 
         ! Is 1 pressed?
-        if (pad%key(1)) then
+        if (fcw_pad%key(1)) then
             call fill_buffer(buffer)
             call fcw_draw_display(screen=buffer)
         end if
 
-        if (pad%key(3)) then
+        if (fcw_pad%key(3)) then
             call fcw_clear_display()
         end if
 

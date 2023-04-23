@@ -26,6 +26,12 @@ struct keypad {
 
 extern struct keypad pad;
 
+struct drawinfo {
+  int ix, iy, n;
+};
+
+extern struct drawinfo last;
+
 
 // Clear the CHIP-8 display
 void fcw_clear_display(void) 
@@ -146,6 +152,7 @@ static inline int findkey(unsigned int xkey) {
 }
 
 static const unsigned int ESC_KEY = 61;
+static const unsigned int RELOAD  = 37;
 
 // Check for valid CHIP-8 events
 //
@@ -179,7 +186,11 @@ void fcw_get_event(int *irep, int *xkey) {
       *irep = -2;
       return;
     } 
-  
+    if (keycode == RELOAD) {
+      *irep = -3;
+      return;
+    } 
+
     // Check CHIP-8 Keypad
     key = findkey(keycode);
     if (key >= 0) {

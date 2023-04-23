@@ -29,16 +29,14 @@ int main ()
     {
       XNextEvent (dis, &report);
       switch (report.type)
- {
- case KeyPress:
-   fprintf (stdout, "key #%ld was pressed.\n",
-     (long) XLookupKeysym (&report.xkey, 0));
-   break;
- case KeyRelease:
-   fprintf (stdout, "key #%ld was released.\n",
-     (long) XLookupKeysym (&report.xkey, 0));
-   break;
- }
+      {
+      case KeyPress:
+        fprintf (stdout, "key #%d was pressed.\n", report.xkey.keycode);
+       break;
+      case KeyRelease:
+        fprintf (stdout, "key #%d was released.\n", report.xkey.keycode);
+        break;
+      }
     }
 
   return (0);
