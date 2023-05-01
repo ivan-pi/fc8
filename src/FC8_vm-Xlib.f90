@@ -134,7 +134,7 @@ interface asuint
    module procedure asuint_default
 end interface
 
-
+logical, parameter :: debug = .false.
 
 contains
 
@@ -288,7 +288,7 @@ contains
 
          read(game_unit,iostat=stat) memory(k:k+1)
          if (is_iostat_end(stat)) exit
-         print '(I4,2X,Z4,2X,2Z2)', k - 512, k, memory(k:k+1)
+         if (debug) print '(I4,2X,Z4,2X,2Z2)', k - 512, k, memory(k:k+1)
          k = k + 2
 
          if (k > 4095) then
@@ -412,7 +412,7 @@ contains
 
       opcode = fetch_opcode()
 
-      print '("PC: ",Z4," opcode: ",Z0.4)', pc, opcode
+      if (debug) print '("PC: ",Z4," opcode: ",Z0.4)', pc, opcode
 
       x = readx(opcode) ! A value from 0 to F
       y = ready(opcode) ! A value from 0 to F
@@ -422,7 +422,7 @@ contains
 
       nnn = iand(opcode,int(z'FFF',instr)) ! the lowest 12 bits (0 - 4095, address)
 
-      print '("n: ",Z2," kk: ",Z2)', n, kk
+      if (debug) print '("n: ",Z2," kk: ",Z2)', n, kk
 
       D = iand(opcode, DF)
 
@@ -430,12 +430,12 @@ contains
       case( D0 )
          select case(kk)
          case ( D00E0 )
-            print *, "Clear the screen"
+            if (debug) print *, "Clear the screen"
             pixelbuf = 0
             ireq = 1
             pc = pc + 2
          case ( D00EE )
-            print *, "Return from subroutine"
+            if (debug) print *, "Return from subroutine"
             sp = sp - 1
             pc = stack(sp)
          case default
@@ -444,36 +444,25 @@ contains
          end select
       case( D1 ) ! 1nnn: jump to address nnn
 
-         print '(A,Z4)', "Jump to address ", nnn
+         if (debug) print '(A,Z4)', "Jump to address ", nnn
          pc = nnn
-         !print '(A,Z4,A,I0)', "jumping to address (hex) ", nnn, " (dec) ", nnn
 
       case( D2 ) ! 2nnn: call address nnn
          stack(sp) = pc + 2
          sp = sp + 1
          pc = nnn
       case( D3 ) ! 3xkk: skip next instr if V(x) == kk
-         !if (V(x) == kk) then
-         !   pc = pc + 4
-         !else
-         !   pc = pc + 2
-         !end if
          call skip_if( V(x) == kk )
       case( D4 ) ! 4xkk: skip next instr if V(x) /= kk
-         !if (V(x) /= kk) then
-         !   pc = pc + 4
-         !else
-         !   pc = pc + 2
-         !end if
          call skip_if( V(x) /= kk )
       case( D5 ) ! 5xy0: skip next instr if V(x) == V(y)
          call skip_if( V(x) == V(y) )
       case( D6 ) ! 6xkk; set V(x) = kk
-         print '("Set v[",Z4,"] = ",Z4)', x, kk
+         if (debug) print '("Set v[",Z4,"] = ",Z4)', x, kk
          v(x) = kk
          pc = pc + 2
       case( D7 ) ! 7xkk; set V(x) = V(x) + kk
-         print '("Set v[",Z4,"] += ",Z4)', x, kk
+         if (debug) print '("Set v[",Z4,"] += ",Z4)', x, kk
          v(x) = v(x) + kk
          pc = pc + 2
       case( D8 )
@@ -489,7 +478,7 @@ contains
       case( D9 ) ! 9xy0: skip the next instruction is V(x) does not equal V(y)
          call skip_if(V(x) /= V(y))
       case( DA ) ! Annn: set I to address nnn
-         write(*,'(A,Z4)') "Set I to ", nnn
+         if (debug) write(*,'(A,Z4)') "Set I to ", nnn
          I = nnn
          pc = pc + 2
       case( DB ) ! Bnnn: jump to location nnn + V(0)
@@ -500,7 +489,7 @@ contains
          pc = pc + 2
       case( DD ) ! Dxyn: display an n-byte sprite starting at memory
                                  !       location I at (Vx, Vy) on the screen, VF = collision
-         print '(A,Z4,2X,Z4,A,I2)', "Draw sprite at ",v(x),v(y)," of height ", n
+         if (debug) print '(A,Z4,2X,Z4,A,I2)', "Draw sprite at ",v(x),v(y)," of height ", n
          call draw_sprite(v(x),v(y),n,collision)
          ireq = 2
          if (collision) then
@@ -528,7 +517,6 @@ contains
                call skip_if ( .not. pressed )
             end block
          case default
-          print *, "IMPOSSIBLE"
            call unknown_opcode(opcode)
          end select
       case( DF ) ! F...
@@ -544,7 +532,7 @@ contains
             else
                ! A valid key press has been regiestered
                V(x) = int(ireq,byte)
-               print *, "FX0A V(x) = ", V(x)
+               if (debug) print *, "FX0A V(x) = ", V(x)
                pc = pc + 2
                ireq = -1
             end if
@@ -632,7 +620,7 @@ contains
       integer(byte), intent(inout) :: VX
       integer(byte), intent(in), value :: VY
 
-      integer(byte), intent(out) :: VF
+      integer(byte), intent(inout) :: VF
          ! TODO: Should VF be inout?
 
       ! It's the responsibility of the caller to make sure the input

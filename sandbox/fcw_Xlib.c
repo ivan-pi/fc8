@@ -26,12 +26,10 @@ struct keypad {
 
 extern struct keypad pad;
 
-struct drawinfo {
-  int ix, iy, n;
+struct dxyn {
+  int x, y;   // location
+  int n;      // number of bytes (rows)
 };
-
-extern struct drawinfo last;
-
 
 // Clear the CHIP-8 display
 void fcw_clear_display(void) 
@@ -58,6 +56,32 @@ void fcw_draw_display(const int32_t screen[64])
 }
 #undef BTEST
 
+// Draw the CHIP-8 display region described by the last draw command d
+
+/*
+void fcw_draw_sprite(const int32_t screen[64], const struct dxyn *d) 
+{
+
+  const int x = d->x * MF;
+  const int y = d->y * MF;
+
+  const unsigned int w = 8 * MF
+  const unsigned int h = d->n * MF;
+
+  XClearArea(dis,win,x,w,h,False); // alternatively, XClearArea(..)
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < d->n; j++) {
+      const int zi = d->x + i;
+      const int zj = d->y + j;
+      const int k = zj + (zi < 32 ? 0 : 32);
+      if (BTEST(screen[k], zi % 32)) {
+        XFillRectangle(dis, win, gc, zi * MF, zj * MF, MF, MF);
+      }
+    }
+  }
+  XFlush(dis);
+}
+*/
 
 // Open the CHIP-8 display
 void fcw_open_display(const int *mf, const CFI_cdesc_t *title) {
@@ -128,24 +152,25 @@ void fcw_close_display(void) {
   return -1;
 } */
 
+// Mapping the Xlib xkey keycodes of the QWERTY keyboard to CHIP-8 keys
 static inline int findkey(unsigned int xkey) {
     switch(xkey) {
-    case 15: return 0x0;
-    case 26: return 0x1;
-    case 27: return 0x2;
-    case 28: return 0x3;
-    case 20: return 0x4;
-    case 21: return 0x5;
-    case 22: return 0x6;
-    case  8: return 0x7;
-    case  9: return 0x8;
-    case 10: return 0x9;
-    case 14: return 0xA;
-    case 16: return 0xB;
-    case 29: return 0xC;
-    case 23: return 0xD;
-    case 11: return 0xE;
-    case 17: return 0xF;
+    case 15: return 0x0; // X
+    case 26: return 0x1; // 1
+    case 27: return 0x2; // 2
+    case 28: return 0x3; // 3
+    case 20: return 0x4; // Q
+    case 21: return 0x5; // W
+    case 22: return 0x6; // E
+    case  8: return 0x7; // A
+    case  9: return 0x8; // S
+    case 10: return 0x9; // D
+    case 14: return 0xA; // Y
+    case 16: return 0xB; // C
+    case 29: return 0xC; // 4
+    case 23: return 0xD; // R
+    case 11: return 0xE; // F
+    case 17: return 0xF; // V
     default: 
         return -1;
     }
@@ -178,7 +203,9 @@ void fcw_get_event(int *irep, int *xkey) {
   switch (report.type)
   {
   case KeyPress:
-    fprintf (stdout, "key #%ld was pressed.\n", report.xkey.keycode);
+
+    fprintf (stdout, "key #%d (%s) was pressed.\n", report.xkey.keycode, 
+        XKeysymToString(XLookupKeysym(&(report.xkey), 0)));
     keycode = report.xkey.keycode;
 
     // Check if ESCAPE was pressed
@@ -198,7 +225,8 @@ void fcw_get_event(int *irep, int *xkey) {
     }
     break;
   case KeyRelease:
-    fprintf (stdout, "key #%ld was released.\n", report.xkey.keycode);
+    fprintf (stdout, "key #%d (%s) was released.\n", report.xkey.keycode, 
+        XKeysymToString(XLookupKeysym(&(report.xkey), 0)));
     keycode = report.xkey.keycode;
 
     // Check CHIP-8 Keypad

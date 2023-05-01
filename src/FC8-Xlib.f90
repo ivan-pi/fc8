@@ -67,6 +67,7 @@ program FC8
     ! Interpreter step
     call vexec(ireq,fcw_pad%key)
 
+    ! Handle interpreter requests
     select case( ireq )
     case( 1 )
       ! 00E0: Clear display
@@ -75,18 +76,20 @@ program FC8
     case( 2 )
       ! DXYN: Update display
       call fcw_draw_display(screen)
-      call sleep_ms(10)
+      call sleep_ms(15)
       ireq = -1
     case( 3 )
-      ! FX0A: Wait for key press
-      if (ievent == 3 .and. ikey >= 0) then
-        ireq = ikey
+      ! FX0A: Wait for key press (we actually wait for release)
+      if (ievent == 3) then
+        if (ikey >= 0) ireq = ikey
       else
         ! Block until valid key is pressed
+        ! The program counter is not incremented
         ireq = -1
       end if
     end select
 
+    ! Timers
     call system_clock(tcurr)
     delta = tcurr - tprev
     if (delta > tstep) then
