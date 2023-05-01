@@ -152,6 +152,33 @@ void fcw_close_display(void) {
   return -1;
 } */
 
+#if defined(AZERTY)
+// Version compatible with AZERTY keyboard
+static inline int findkey(unsigned int xkey) {
+    switch(xkey) {
+    case 53: return 0x0; // X
+    case 10: return 0x1; // 1, ampersand
+    case 11: return 0x2; // 2, eacute
+    case 12: return 0x3; // 3, quotedbl
+    case 24: return 0x4; // A
+    case 25: return 0x5; // Z
+    case 26: return 0x6; // E
+    case 38: return 0x7; // Q
+    case 39: return 0x8; // S
+    case 40: return 0x9; // D
+    case 52: return 0xA; // W
+    case 54: return 0xB; // C
+    case 13: return 0xC; // 4, apostrophe
+    case 27: return 0xD; // R
+    case 41: return 0xE; // F
+    case 55: return 0xF; // V
+    default: 
+        return -1;
+    }
+}
+static const unsigned int ESC_KEY = 9;
+static const unsigned int RELOAD  = 19;
+#else
 // Mapping the Xlib xkey keycodes of the QWERTY keyboard to CHIP-8 keys
 static inline int findkey(unsigned int xkey) {
     switch(xkey) {
@@ -175,9 +202,9 @@ static inline int findkey(unsigned int xkey) {
         return -1;
     }
 }
-
 static const unsigned int ESC_KEY = 61;
 static const unsigned int RELOAD  = 37;
+#endif
 
 // Check for valid CHIP-8 events
 //

@@ -22,6 +22,9 @@ target_link_libraries(FC8 eggx-procall-2003)
 
 find_package(X11 REQUIRED)
 
+set(KEYBOARD "QWERTY" CACHE STRING "Keyboard layout; only options QWERTY and AZERTY are valid")
+message(STATUS "Keyboard layout: ${KEYBOARD}")
+
 if(X11_FOUND)
     add_executable(FC8-Xlib
         src/FC8-Xlib.f90 
@@ -34,4 +37,7 @@ if(X11_FOUND)
         )
     target_link_libraries(FC8-Xlib "${X11_LIBRARIES}")
     target_include_directories(FC8-Xlib PRIVATE "${X11_INCLUDE_DIR}")
+    if (KEYBOARD STREQUAL "AZERTY")
+        target_compile_definitions(FC8-Xlib PUBLIC -DAZERTY)
+    endif()
 endif()

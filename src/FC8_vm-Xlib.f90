@@ -740,9 +740,7 @@ contains
 
       collision = .false.
 
-#if DEBUG
-      print *, "Drawn sprite at address I = ", I
-#endif
+      if (debug) print *, "Drawn sprite at address I = ", I
 
       do row = 0, n-1
          do col = 0, 7
