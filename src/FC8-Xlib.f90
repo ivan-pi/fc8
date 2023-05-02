@@ -76,7 +76,7 @@ program FC8
     case( 2 )
       ! DXYN: Update display
       call fcw_draw_display(screen)
-      call sleep_ms(15)
+      call sleep_ms(17)
       ireq = -1
     case( 3 )
       ! FX0A: Wait for key press (we actually wait for release)

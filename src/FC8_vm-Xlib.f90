@@ -473,8 +473,8 @@ contains
             integer(byte) :: VF
             call D8XYN(n,V(x),V(y),VF)
             select case(n)
-            !case(1,2,3)
-            !   V(15) = 0
+            case(1,2,3)
+               V(15) = 0
             case(4,5,6,7,8,14)
                V(15) = VF
             end select
@@ -541,8 +541,8 @@ contains
                ireq = -1
             end if
          case(DFX15)
-            delay_timer = V(x)
-            !delay_timer = asuint(V(x),delay_timer)
+            !delay_timer = V(x)
+            delay_timer = asuint(V(x),delay_timer)
             pc = pc + 2
          case(DFX18)
             !sound_timer = asuint(V(x),sound_timer)
