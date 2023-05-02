@@ -3,7 +3,7 @@ program FC8
   use, intrinsic :: iso_c_binding, only: c_null_char
   
   use fcw
-  use FC8_vm, only: vexec, initmem, loadgame, timers, screen => pixelbuf
+  use FC8_vm, only: vexec, loadgame, timers, screen => pixelbuf
   use sleep_std, only: sleep_ms
 
   implicit none
@@ -21,8 +21,6 @@ program FC8
   integer(prec) :: delta, tprev, tcurr, trate, tstep
 
   integer :: ievent, ikey, ireq
-
-  call initmem()
 
   nargs = command_argument_count()
   if (nargs /= 1) then
@@ -46,7 +44,7 @@ program FC8
   call fcw_open_display(MF,title="CHIP-8")
 
   call system_clock(tprev,trate)
-  tstep = nint(trate/60.)
+  tstep = nint(trate/60.d0)
   !print *, "tstep = ", tstep
 
   ireq = -1  ! No request

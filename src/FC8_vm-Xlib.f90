@@ -15,7 +15,7 @@ private
 
 public :: int8, int16
 public :: loadgame, memory
-public :: initmem, vexec
+public :: vexec
 public :: timers
 public :: pixelbuf
 
@@ -261,6 +261,8 @@ contains
 
       integer :: stat, game_unit, k
 
+      call initmem()
+
       open(newunit=game_unit, &
            file=game, &
            form="unformatted", &
@@ -276,7 +278,6 @@ contains
       delay_timer = 0
       sound_timer = 0
       V = 0
-      memory = 0
 
       ! Clear screen 
       pixelbuf = 0
@@ -503,26 +504,20 @@ contains
          end if
          pc = pc + 2
       case( DE )
-         select case(kk)
-         case( DEX9E )
-            block
-               integer :: hd
-               logical :: pressed
-               hd = ashexdigit(V(x))
-               pressed = keypad( hd )
+         block
+            integer :: hd
+            logical :: pressed
+            hd = ashexdigit(V(x))
+            pressed = keypad( hd )            
+            select case(kk)
+            case( DEX9E )
                call skip_if( pressed )
-            end block
-         case( DEXA1 )
-            block
-               integer :: hd
-               logical :: pressed
-               hd = ashexdigit(V(x))
-               pressed = keypad( hd )
-               call skip_if ( .not. pressed )
-            end block
-         case default
-           call unknown_opcode(opcode)
-         end select
+            case( DEXA1 )
+               call skip_if( .not. pressed )
+            case default
+              call unknown_opcode(opcode)
+            end select
+         end block
       case( DF ) ! F...
          select case(kk)
          case(DFX07)
@@ -541,30 +536,23 @@ contains
                ireq = -1
             end if
          case(DFX15)
-            !delay_timer = V(x)
             delay_timer = asuint(V(x),delay_timer)
             pc = pc + 2
          case(DFX18)
-            !sound_timer = asuint(V(x),sound_timer)
             sound_timer = asuint(V(x),sound_timer)
             pc = pc + 2
          case(DFX1E)
-            !I = I + V(x)
             I = I + asaddr(V(x))
             pc = pc + 2
          case(DFX29)
             ! FX29: Set I to location of sprite for
             !       the character in V(X)
-            block
-               integer :: hd
-               hd = ashexdigit(V(x))
-               !hd = V(x)
+            associate(hd => ashexdigit(V(x)))
                I = fontidx(hd)
-            end block
+            end associate
             pc = pc + 2
          case(DFX33)
             ! FX33: Decode VX into binary-coded decimal
-            ! TODO: MAke 
             call bcd(V(x))
             pc = pc + 2
          case(DFX55)
@@ -596,26 +584,26 @@ contains
       integer :: u, d
 
       ! Convert to unsigned integer
-      u = iand(transfer(Vx,u),int(z'FF',kind(u)))
+      u = asuint(Vx,u)
 
       ! The purpose of this function is to set:
       !
-            memory(I)   = u / 100
-            memory(I+1) = mod(u,100) / 10
-            memory(I+2) = mod(u,10)
+      !      memory(I)   = u / 100
+      !      memory(I+1) = mod(u,100) / 10
+      !      memory(I+2) = mod(u,10)
       !
       ! Here we take the more explicit approach instead.
 
-      !d = u / 100   ! Divisor  
-      !u = u - d*100 ! Remainder
+      d = u / 100   ! Divisor  
+      u = u - d*100 ! Remainder
 
-      !memory(I)   = int(d,byte)
+      memory(I)   = int(d,byte)
       
-      !d = u / 10    ! Divisor
-      !u = u - d*10  ! Remainder
+      d = u / 10    ! Divisor
+      u = u - d*10  ! Remainder
 
-      !memory(I+1) = int(d,byte)
-      !memory(I+2) = int(u,byte)
+      memory(I+1) = int(d,byte)
+      memory(I+2) = int(u,byte)
 
    end subroutine
 
@@ -739,11 +727,12 @@ contains
    ! that doesn't happen.
    !
    subroutine draw_sprite(vx,vy,n,collision)
-      integer(int8), value :: vx, vy, n
+      implicit none
+      integer(byte), intent(in) :: vx, vy, n
       logical, intent(out) :: collision
 
       logical :: sprite(0:n-1,0:7), collide
-      integer :: row, col, zx, zy, k , c
+      integer :: row, col, zx, zy, qx, qy
 
       collision = .false.
 
@@ -755,14 +744,14 @@ contains
          end do
       end do
 
-      vx = mod(vx, 64)
-      vy = mod(vy, 32)
+      qx = mod(vx, 64)
+      qy = mod(vy, 32)
 
       do row = 0, n-1
-         zy = vy + row
+         zy = qy + row
          if (zy > 31) cycle
          do col = 0, 7
-            zx = vx + col
+            zx = qx + col
             if (zx > 63) cycle
             
             collide = sprite(row,col) .eqv. screen(zx,zy)
