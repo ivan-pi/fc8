@@ -12,7 +12,8 @@ The following tools and libraries are required:
 * C compiler
 * CMake v3.15 or higher, and/or Make
 * [EGGX/ProCALL graphics library](#installing-eggxprocall)
-* Xlib (or libX11); the X window system client library
+* Xlib - the X window system protocol client library, or
+* XCB - the X protocol C language binding
 
 ### Build steps
 
@@ -27,6 +28,44 @@ If everything worked, you should now be able to play a CHIP-8 game using:
 ```
 $ ./FC8 <path/to/cartridge>
 ```
+
+The available options are:
+
+```
+Usage FC8 [-h] [-q] [-w|-h|-m <N>] [-d <server>] [-r <N>]
+
+    Options:
+
+    -h, --help               Show this message
+    -q, --quiet              Disable sound
+    -w, --width              Set window width  (default: 640)
+    -h, --height             Set window height (default: 320)
+    -m, --magnification      Set magnification factor (default: 10)
+    -d, --display <display>  Choose display server
+    -r, --rate               Control framerate
+    -v, --version            Print version information
+
+    Developer options: (only available if Debug or ReleaseDebug flag was set)
+
+    -fdump[=filename]        Dump disassembly
+    -fdump-customasm         Dump disassembly in customasm readable format
+    -b, --break              Set a breakpoint where the program exits 
+                             and displays the register status
+
+```
+
+Buttons:
+- ESC: Escape
+- 0: Reload game cartridge
+- Space: Pause/Run
+
+Other ideas:
+- configurable background and foreground colors
+- configurable clock-speed
+- debugging, by writing to program memory with the hex-keyboard (simple OS essentially, kind of like here: https://www.reddit.com/r/EmuDev/comments/hjlh4u/sharing_yet_another_chip8_emulator/)
+- REPL mode
+- debugger
+
 
 ### Installing EGGX/ProCALL
 

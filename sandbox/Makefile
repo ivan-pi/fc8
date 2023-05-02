@@ -39,6 +39,10 @@ fcw_Xlib.o: fcw_Xlib.c
 fc8_win.o: fc8_win.c
 	$(CC) -I$(PREFIX) $(CFLAGS) -c $<
 
+
+glut_example: glut_example.c blocks_vert.c
+	$(CC) $(CFLAGS) -DGL_SILENCE_DEPRECATION -framework OpenGL -framework GLUT -o $@ $^
+
 .phony: clean
 clean:
-	rm -f *.o *.mod
+	rm -f *.o *.mod glut_example xlib_example fcw_main_Xlib fcw_main_xcb
