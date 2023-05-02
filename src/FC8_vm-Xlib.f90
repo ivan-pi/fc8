@@ -84,13 +84,15 @@ integer(addr) :: stack(12) = 0
 ! integer type.
 
 !> CHIP-8 Delay Timer (DT)
-integer(byte) :: delay_timer = 0
+integer :: delay_timer = 0
 
 !> CHIP-8 Sound Timer / Tone Duration
-integer(byte) :: sound_timer = 0
+integer :: sound_timer = 0
 
-! The timers share the same type as the variables V(:)
-! as the only means of manipulating the timers is using
+! The timers must be able of counting down from 255, hence
+! in Fortran we use the default integer type.
+!
+! The only means of manipulating the timers is using
 ! the following instructions:
 ! 
 !   FX07 ... Let VX = current delay timer value
@@ -101,7 +103,7 @@ integer(byte) :: sound_timer = 0
 !> Screen buffer (black and white pixels)
 !> TODO: Should this be flipped 32 rows by 64 columns?
 integer(int32) :: pixelbuf(0:63) = 0
-
+logical :: screen(0:63,0:31) = .false.
 !
 ! Font
 ! 
@@ -274,9 +276,11 @@ contains
       delay_timer = 0
       sound_timer = 0
       V = 0
+      memory = 0
 
       ! Clear screen 
       pixelbuf = 0
+      screen = .false.
 
       ! The first 512 bytes, from z'000' to z'1FF', were used for the 
       ! original interpreter, and hence should not be used by programs.
@@ -300,7 +304,6 @@ contains
 
     end subroutine
 
-#if DEBUG
     subroutine print_state()
 
         character(len=*), parameter :: fmt = '(A,Z2,A,Z2,A,Z2,A,Z2)'
@@ -317,7 +320,6 @@ contains
         write(*,*)
 
     end subroutine
-#endif 
 
    !> Fetch an instruction/opcode from the memory, depending on the
    !> location of the program counter.
@@ -350,7 +352,7 @@ contains
    !> Helper function to skip an instruction by incrementing the
    !> program counter
    subroutine skip_if(expr)
-      logical, intent(in) :: expr
+      logical, intent(in), value :: expr
       if (expr) then
          pc = pc + 4
       else
@@ -362,11 +364,6 @@ contains
    subroutine vexec(ireq,keypad)
       integer, intent(inout) :: ireq
       logical(c_bool), intent(in) :: keypad(0:15)
-
-      integer(instr) :: opcode
-
-      integer(byte) :: x, y, n, kk
-      integer(instr) :: nnn
 
       ! Select instruction
       integer(instr) :: D
@@ -410,6 +407,11 @@ contains
 
       logical :: collision
 
+      integer(instr) :: opcode
+
+      integer(byte) :: x, y, n, kk
+      integer(instr) :: nnn
+
       opcode = fetch_opcode()
 
       if (debug) print '("PC: ",Z4," opcode: ",Z0.4)', pc, opcode
@@ -417,10 +419,10 @@ contains
       x = readx(opcode) ! A value from 0 to F
       y = ready(opcode) ! A value from 0 to F
 
-      n   = iand(opcode,int(z'00F',instr)) ! the lowest 4 bits  (0 - 15, index)
-      kk  = iand(opcode,int(z'0FF',instr)) ! the lowest 8 bits  (0 - 255, 1-byte value)
+      n   = iand(opcode,int(z'000F',instr)) ! the lowest 4 bits  (0 - 15, index)
+      kk  = iand(opcode,int(z'00FF',instr)) ! the lowest 8 bits  (0 - 255, 1-byte value)
 
-      nnn = iand(opcode,int(z'FFF',instr)) ! the lowest 12 bits (0 - 4095, address)
+      nnn = iand(opcode,int(z'0FFF',instr)) ! the lowest 12 bits (0 - 4095, address)
 
       if (debug) print '("n: ",Z2," kk: ",Z2)', n, kk
 
@@ -432,6 +434,7 @@ contains
          case ( D00E0 )
             if (debug) print *, "Clear the screen"
             pixelbuf = 0
+            screen = .false.
             ireq = 1
             pc = pc + 2
          case ( D00EE )
@@ -470,6 +473,8 @@ contains
             integer(byte) :: VF
             call D8XYN(n,V(x),V(y),VF)
             select case(n)
+            !case(1,2,3)
+            !   V(15) = 0
             case(4,5,6,7,8,14)
                V(15) = VF
             end select
@@ -483,7 +488,6 @@ contains
          pc = pc + 2
       case( DB ) ! Bnnn: jump to location nnn + V(0)
          pc = nnn + asaddr(V(0))
-         !pc = nnn + V(0)
       case( DC ) ! Cxkk: V(x) = random byte AND kk
          V(x) = iand(rand_byte(), kk)
          pc = pc + 2
@@ -522,7 +526,7 @@ contains
       case( DF ) ! F...
          select case(kk)
          case(DFX07)
-            V(x) = delay_timer
+            V(x) = int(delay_timer,byte)
             pc = pc + 2
          case(DFX0A)
             if (ireq == -1) then
@@ -538,9 +542,11 @@ contains
             end if
          case(DFX15)
             delay_timer = V(x)
+            !delay_timer = asuint(V(x),delay_timer)
             pc = pc + 2
          case(DFX18)
-            sound_timer = V(x)
+            !sound_timer = asuint(V(x),sound_timer)
+            sound_timer = asuint(V(x),sound_timer)
             pc = pc + 2
          case(DFX1E)
             !I = I + V(x)
@@ -552,6 +558,7 @@ contains
             block
                integer :: hd
                hd = ashexdigit(V(x))
+               !hd = V(x)
                I = fontidx(hd)
             end block
             pc = pc + 2
@@ -563,12 +570,12 @@ contains
          case(DFX55)
             ! FX55: Register dump
             memory(I:I+x) = V(0:x)
-            I = I + x + 1
+            I = I + (x + 1)
             pc = pc + 2
          case(DFX65)
             ! FX65: Register load
             V(0:x) = memory(I:I+x)
-            I = I + x + 1
+            I = I + (x + 1)
             pc = pc + 2
          case default
             call unknown_opcode(opcode)
@@ -593,22 +600,22 @@ contains
 
       ! The purpose of this function is to set:
       !
-      !      memory(I)   = u / 100
-      !      memory(I+1) = mod(u,100) / 10
-      !      memory(I+2) = mod(u,10)
+            memory(I)   = u / 100
+            memory(I+1) = mod(u,100) / 10
+            memory(I+2) = mod(u,10)
       !
       ! Here we take the more explicit approach instead.
 
-      d = u / 100   ! Divisor  
-      u = u - d*100 ! Remainder
+      !d = u / 100   ! Divisor  
+      !u = u - d*100 ! Remainder
 
-      memory(I)   = int(d,byte)
+      !memory(I)   = int(d,byte)
       
-      d = u / 10    ! Divisor
-      u = u - d*10  ! Remainder
+      !d = u / 10    ! Divisor
+      !u = u - d*10  ! Remainder
 
-      memory(I+1) = int(d,byte)
-      memory(I+2) = int(u,byte)
+      !memory(I+1) = int(d,byte)
+      !memory(I+2) = int(u,byte)
 
    end subroutine
 
@@ -709,9 +716,9 @@ contains
 !
 
    subroutine timers()
-      if (delay_timer > 0) delay_timer = delay_timer - 1_byte
+      if (delay_timer > 0) delay_timer = delay_timer - 1
       if (sound_timer > 0) then
-         sound_timer = sound_timer - 1_byte
+         sound_timer = sound_timer - 1
          ! TODO: make beep
       end if
    end subroutine
@@ -732,47 +739,61 @@ contains
    ! that doesn't happen.
    !
    subroutine draw_sprite(vx,vy,n,collision)
-      integer(int8), intent(in) :: vx, vy, n
+      integer(int8), value :: vx, vy, n
       logical, intent(out) :: collision
 
-      logical :: collide
+      logical :: sprite(0:n-1,0:7), collide
       integer :: row, col, zx, zy, k , c
 
       collision = .false.
 
       if (debug) print *, "Drawn sprite at address I = ", I
 
+      do col = 0, 7
+         do row = 0, n-1
+            sprite(row,7 - col) = btest(memory(I + row),col)
+         end do
+      end do
+
+      vx = mod(vx, 64)
+      vy = mod(vy, 32)
+
       do row = 0, n-1
+         zy = vy + row
+         if (zy > 31) cycle
          do col = 0, 7
-
             zx = vx + col
-            zy = vy + row
+            if (zx > 63) cycle
+            
+            collide = sprite(row,col) .eqv. screen(zx,zy)
+            if (screen(zx,zy)) then
+              if (collide) collision = .true.
+            end if
+            screen(zx,zy) = .not. collide
 
-            ! TODO: handle negative vx and vy and clipping
-            zx = mod(zx, 64)
-            zy = mod(zy, 32)
+         end do
+      end do
+
+      call screen2pixelbuf()
+
+   end subroutine
+
+
+   subroutine screen2pixelbuf()
+      integer :: zx, zy, k, c
+      do zx = 0, 63
+         do zy = 0, 31
 
             k = zy + ( zx / 32 ) * 32  ! element position in pixelbuf
             c = mod(zx, 32)            !     bit position in pixelbuf(k)
 
-            associate(sprite_pixel => btest(memory(I + row),7 - col), &
-                      screen_pixel => btest(pixelbuf(k),c))
-
-               collide = sprite_pixel .eqv. screen_pixel
-               if (screen_pixel) then
-                  if (collide) collision = .true.
-               end if
-
-               if (collide) then
-                  pixelbuf(k) = ibclr(pixelbuf(k), c)
-               else
-                  pixelbuf(k) = ibset(pixelbuf(k), c)
-               end if
-
-            end associate
+            if (screen(zx,zy)) then
+               pixelbuf(k) = ibset(pixelbuf(k), c)
+            else
+               pixelbuf(k) = ibclr(pixelbuf(k), c)
+            end if
          end do
-      end do
-
+      end do 
    end subroutine
 
 end module

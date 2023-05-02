@@ -15,7 +15,7 @@ target_link_libraries(eggx-procall-2003 PUBLIC ${EGGX_LIBRARIES})
 
 add_executable(FC8 
     src/FC8.f90 
-    src/FC8_vm.F90
+    src/FC8_vm.f90
     src/randint8.c
     )
 target_link_libraries(FC8 eggx-procall-2003)
@@ -28,7 +28,7 @@ message(STATUS "Keyboard layout: ${KEYBOARD}")
 if(X11_FOUND)
     add_executable(FC8-Xlib
         src/FC8-Xlib.f90 
-        src/FC8_vm-Xlib.F90
+        src/FC8_vm-Xlib.f90
         src/fcw-Xlib.f90
         sandbox/fcw_Xlib.c
         src/randint8.c

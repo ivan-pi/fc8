@@ -287,7 +287,6 @@ contains
 
     end subroutine
 
-#if DEBUG
     subroutine print_state()
 
         character(len=*), parameter :: fmt = '(A,Z2,A,Z2,A,Z2,A,Z2)'
@@ -304,7 +303,6 @@ contains
         write(*,*)
 
     end subroutine
-#endif 
 
    !> Fetch an instruction/opcode from the memory, depending on the
    !> location of the program counter.
@@ -759,9 +757,7 @@ contains
          end do
       end do
 
-#if DEBUG
       print *, "Drawn sprite at address I = ", I
-#endif
 
       do row = 0, n-1
          do col = 0, 7
