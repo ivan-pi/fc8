@@ -13,5 +13,5 @@ find_package(EGGX 0.95 REQUIRED)
 add_library(eggx-procall-2003 OBJECT procall.f90)
 target_link_libraries(eggx-procall-2003 PUBLIC ${EGGX_LIBRARIES})
 
-add_executable(fc8 chip8.F90 randint8.c)
+add_executable(fc8 chip8.F90 rand_byte.c)
 target_link_libraries(fc8 eggx-procall-2003)
