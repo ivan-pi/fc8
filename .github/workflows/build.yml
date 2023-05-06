@@ -24,6 +24,6 @@ jobs:
           version: ${{ matrix.toolchain.version }}
       - name: Configure build
         run: >-
-          cmake -S . -B
+          cmake -S . -B build
       - name: Compile program
         run: cmake --build build
