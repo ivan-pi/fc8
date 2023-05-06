@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.15)
 
 project(FC8
         VERSION 0.1.0
@@ -8,17 +8,17 @@ project(FC8
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-find_package(EGGX 0.95 REQUIRED)
+#find_package(EGGX 0.95 REQUIRED)
 
-add_library(eggx-procall-2003 OBJECT src/procall.f90)
-target_link_libraries(eggx-procall-2003 PUBLIC ${EGGX_LIBRARIES})
+#add_library(eggx-procall-2003 OBJECT src/procall.f90)
+#target_link_libraries(eggx-procall-2003 PUBLIC ${EGGX_LIBRARIES})
 
-add_executable(FC8 
-    src/FC8.f90 
-    src/FC8_vm.f90
-    src/randint8.c
-    )
-target_link_libraries(FC8 eggx-procall-2003)
+#add_executable(FC8 
+#    src/FC8.f90 
+#    src/FC8_vm.f90
+#    src/randint8.c
+#    )
+#target_link_libraries(FC8 eggx-procall-2003)
 
 find_package(X11 REQUIRED)
 

@@ -1,0 +1,31 @@
+name: build
+
+on: [push, pull request]
+
+jobs:
+  build_debug:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        toolchain:
+          - {compiler: gcc, version: 11}
+          - {compiler: intel-classic, version: '2021.9'}
+        include:
+          - os: ubuntu-latest
+            toolchain: {compiler: intel, version: '2023.1'}
+    env:
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: awvwgk/setup-fortran@v1
+        id: setup-fortran
+        with:
+          compiler: ${{ matrix.toolchain.compiler }}
+          version: ${{ matrix.toolchain.version }}
+      - name: Configure build
+        run: >-
+          cmake -S . -B
+      - name: Compile program
+        run: cmake --build build
