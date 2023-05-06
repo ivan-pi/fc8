@@ -7,6 +7,7 @@ project(FC8
         LANGUAGES C Fortran)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+set(CMAKE_C_STANDARD 99)
 
 #find_package(EGGX 0.95 REQUIRED)
 
