@@ -9,36 +9,23 @@ project(FC8
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 set(CMAKE_C_STANDARD 99)
 
-#find_package(EGGX 0.95 REQUIRED)
-
-#add_library(eggx-procall-2003 OBJECT src/procall.f90)
-#target_link_libraries(eggx-procall-2003 PUBLIC ${EGGX_LIBRARIES})
-
-#add_executable(FC8 
-#    src/FC8.f90 
-#    src/FC8_vm.f90
-#    src/randint8.c
-#    )
-#target_link_libraries(FC8 eggx-procall-2003)
-
 find_package(X11 REQUIRED)
 
 set(KEYBOARD "QWERTY" CACHE STRING "Keyboard layout; only options QWERTY and AZERTY are valid")
 message(STATUS "Keyboard layout: ${KEYBOARD}")
 
-if(X11_FOUND)
-    add_executable(FC8-Xlib
-        src/FC8-Xlib.f90 
-        src/FC8_vm-Xlib.f90
-        src/fcw-Xlib.f90
-        sandbox/fcw_Xlib.c
-        src/randint8.c
-        src/sleep.c
-        src/sleep_std.f90
-        )
-    target_link_libraries(FC8-Xlib "${X11_LIBRARIES}")
-    target_include_directories(FC8-Xlib PRIVATE "${X11_INCLUDE_DIR}")
-    if (KEYBOARD STREQUAL "AZERTY")
-        target_compile_definitions(FC8-Xlib PUBLIC -DAZERTY)
-    endif()
+
+add_executable(FC8-Xlib
+    src/FC8-Xlib.f90 
+    src/FC8_vm-Xlib.f90
+    src/fcw-Xlib.f90
+    src/fcw_Xlib.c
+    src/randint8.c
+    src/sleep.c
+    src/sleep_std.f90
+    )
+target_link_libraries(FC8-Xlib "${X11_LIBRARIES}")
+target_include_directories(FC8-Xlib PRIVATE "${X11_INCLUDE_DIR}")
+if (KEYBOARD STREQUAL "AZERTY")
+    target_compile_definitions(FC8-Xlib PUBLIC -DAZERTY)
 endif()
