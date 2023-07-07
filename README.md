@@ -1,6 +1,6 @@
 # FC8
 
-Fortran CHIP-8 interpreter
+Fortran CHIP-8 interpreter ⚠️ work in progress ⚠️
 
 ## Building FC8
 
