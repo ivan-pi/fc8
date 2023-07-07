@@ -41,14 +41,6 @@ Usage FC8 [-h] [-q] [-w|-h|-m <N>] [-d <server>] [-r <N>]
     -d, --display <display>  Choose display server
     -r, --rate               Control framerate
     -v, --version            Print version information
-
-    Developer options: (only available if Debug or ReleaseDebug flag was set)
-
-    -fdump[=filename]        Dump disassembly
-    -fdump-customasm         Dump disassembly in customasm readable format
-    -b, --break              Set a breakpoint where the program exits 
-                             and displays the register status
-
 ```
 
 Buttons:
@@ -100,38 +92,36 @@ Larger collection of games and other demos can be found in:
 
 ## Graphics and keyboard input
 
-* [SDL](https://github.com/libsdl-org/SDL) and [fortran-sdl2](https://cyber.dabamos.de/programming/modernfortran/sdl.html)
+In the future I might add versions based upon the following frameworks/libraries:
+
+* [SDL](https://github.com/libsdl-org/SDL)
 * [GLUT/OpenGL](https://www.opengl.org/resources/libraries/glut/spec3/spec3.html)
 * [GTK](https://www.gtk.org/) and [gtk-fortran](https://github.com/vmagnin/gtk-fortran)
-* [X11](https://www.x.org/wiki/) or [XCB](https://xcb.freedesktop.org/)
-* [Wayland](https://wayland.freedesktop.org/)
+* [XCB](https://xcb.freedesktop.org/)
 * [Win32 (Windows)](https://learn.microsoft.com/en-us/windows/win32/)
 * [AppKit (MacOS)](https://developer.apple.com/documentation/appkit?language=objc)
-* [EGGX/ProCALL](https://www.ir.isas.jaxa.jp/~cyamauch/eggx_procall/) (no support for key-release detection)
 
 One of my aims in this project was to investigate design patterns. One of the 
 typical design problems in game development (or graphical programs in general)
-is how to support different graphical engines on different platforms.
-
-The easy solution is to pick a graphics framework with widespread platform 
+is how to support different graphical engines on different platforms. 
+The easiest solution is to pick a graphics framework with widespread platform 
 support. This way all of the platform specific issues are pushed down into the
-graphical layer. 
-
-Obviously, the requirements of a black and white, 2D game view are low compared
-to more realistic programs, however the designs patterns still apply.
+graphics framework layer. Obviously, the requirements of a black and white, 
+2D game view are low compared to more realistic graphical programs, however the 
+designs patterns still apply.
 
 ## Writing and editing ROMs manually
 
 For a true experience you can write the games by hand in pseudo-assembly,
-and compile them to hex manually. You can use a hex editor such as [`hexyl`](https://github.com/sharkdp/hexyl) or [`hexedit`](http://rigaux.org/hexedit.html) to save and edit your CHIP-8 programs. 
+and compile them to hex manually. Or you could use a hex editor such as [`hexyl`](https://github.com/sharkdp/hexyl) or [`hexedit`](http://rigaux.org/hexedit.html) to save and edit your CHIP-8 programs. 
 
-The `hexdump` tool can be used to quickly inspect a cartridge (watch out as different tools might display the byte-order differently). Alternatively, [HexEd.it](https://hexed.it/) client-side JavaScript based hex editor is a more powerful tool which runs in the browser.
+The `hexdump` tool can be used to quickly inspect a cartridge (watch out as different tools might display the byte-order differently). Alternatively, the [HexEd.it](https://hexed.it/) client-side JavaScript based hex editor is a more powerful tool which runs in the browser.
 
 ## CHIP8 Assemblers
 
 A far better developer experience is to use a high-level assembler. The most famous one today is [Octo](http://johnearnest.github.io/Octo/), which also includes a disassembler and emulator, as well as a sprite editor. A second alternative is [Dorito](https://github.com/lesharris/dorito).
 
-Personally, I have found the [`customasm`](https://github.com/hlorenzi/customasm) tool working well too. Examples of CHIP8 programs written in a custom assembly language can be found in the `asm/` folder of this repository.
+Personally, I have found the [`customasm`](https://github.com/hlorenzi/customasm) tool works reasonably well. Examples of CHIP8 programs written in a custom assembly language can be found in the `asm/` folder of this repository.
 
 Other assemblers:
 - [c8c](https://github.com/glouw/c8c)
