@@ -24,7 +24,7 @@ $ make
 ```
 If everything worked, you should now be able to play a CHIP-8 game using:
 ```
-$ ./FC8 <path/to/cartridge>
+$ ./FC8-Xlib <path/to/cartridge>
 ```
 
 The command-line options available (still TODO!) are:
