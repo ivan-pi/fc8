@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-void fc8_display_open(const char *title, int n, const int *mf);
+void fc8_display_open(const char *title, int n, const float *zoom);
 
 void fc8_display_close(void);
 
@@ -25,12 +25,12 @@ void fc8_event_get(
 	int * /* xkey */);
 
 
-struct fc8_keypad { 
+extern struct fc8_keypad { 
 	bool key[16];
-};
+} keypad;
 
 // Defined in the Fortran `io` module
-extern struct fc8_keypad keypad;
+//extern struct fc8_keypad keypad;
 
 #ifdef __cplusplus
 }

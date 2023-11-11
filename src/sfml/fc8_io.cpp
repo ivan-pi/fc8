@@ -8,7 +8,7 @@
 
 
 // Magnification factor
-static int MF = 8;
+static int MF = 10;
 
 static sf::RenderWindow window;
 

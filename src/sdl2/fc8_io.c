@@ -9,15 +9,13 @@
 
 #include "SDL2/SDL.h"
 
-static int MF = 10; // Magnification Factor
-
 static struct SDL_Window   *window;
 static struct SDL_Renderer *window_renderer;
 
-void fc8_display_open(const char *title, int n, const int *mf)
+static int MF = 10; // Magnification Factor
+
+void fc8_display_open(const char *title, int n, const float *zoom)
 {
-    // Set magnification factor
-    if (mf) MF = *mf;
 
     int istat = SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO); // Maybe add INIT_TIMER for timer subsystem?
     if (istat < 0) {
@@ -25,6 +23,10 @@ void fc8_display_open(const char *title, int n, const int *mf)
         puts(SDL_GetError());
     }
 
+    // Set magnification factor
+    if (zoom) MF *= (int) *zoom/100.;
+
+    // Make null-terminated string
     char* tmp = (char*) malloc((n+1) * sizeof(char) );
     strncpy(tmp, title, n * sizeof(char) );
     tmp[n] = '\0';
@@ -128,7 +130,7 @@ void fc8_event_get(int *irep, int *xkey)
     SDL_Event event;
     int key = -1;
 
-    int e = SDL_WaitEvent(&event);
+    int e = SDL_PollEvent(&event);
 
     if (!e) {
         *irep = -1;

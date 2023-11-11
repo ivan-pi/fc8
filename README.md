@@ -30,32 +30,26 @@ $ ./fc8 <path/to/cartridge>
 
 The command-line options available (:warning: still TO DO) are:
 ```
-Usage: ./fc8 [-h] [-q] [-w|-h|-m <N>] [-d <server>] [-r <N>]
+Usage: fc8 [-h] [-s] [-zoom=Z] [--config=FILE] <path-to-ch8>
 
-    Options:
+  Fortran CHIP-8 interpreter
 
-    -h, --help               Show this message
-    -q, --quiet              Disable sound
-    -w, --width              Set window width  (default: 640)
-    -h, --height             Set window height (default: 320)
-    -m, --magnification      Set magnification factor (default: 10)
-    -d, --display <display>  Choose display server
-    -r, --rate               Control framerate
-    -v, --version            Print version information
+required arguments:
+  <path-to-ch8>           a CHIP8 ROM file
 
-    Developer options: (only available if Debug or ReleaseDebug flag was set)
-
-    -fdump[=filename]        Dump disassembly
-    -fdump-customasm         Dump disassembly in customasm readable format
-    -b, --break              Set a breakpoint where the program exits 
-                             and displays the register status
+options:
+  -h, --help              show this help text and exit
+  -v, --version           display version and exit
+  -s, --silent            silent mode (disable audio)
+  --zoom=Z                zoom percentage, 30 <= Z <= 200
+  --display=:N            server display number; the default is 0
+  --config=FILE           configuration file: a Fortran namelist
 
 ```
 
-Buttons:
-- ESC: Escape
-- 0: Reload game cartridge
-- Space: Pause/Run (NOT IMPLEMENTED)
+The interpreter displays responds to the following keys
+- <kbd>Escape</kbd>: Quit
+- <kbd>0</kbd>: Reload ROM file ("replay")
 
 Other ideas:
 - configurable background and foreground colors

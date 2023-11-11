@@ -18,9 +18,9 @@ static Window win;
 
 static GC gc; /* graphics context */
 
-static int MF = 8; // Magnification Factor
+static int MF = 10; // Magnification Factor
 
-void fc8_display_open(const char *title, int n, const int *mf) {
+void fc8_display_open(const char *title, int n, const float *zoom) {
 
   dis = XOpenDisplay (NULL);
   //XAutoRepeatOff(dis);
@@ -31,11 +31,11 @@ void fc8_display_open(const char *title, int n, const int *mf) {
   }
 
   // Set magnification factor
-  if (mf) MF = *mf;
+  if (zoom) MF *= (int) *zoom/100.;
 
   win = XCreateSimpleWindow(dis, 
                             RootWindow(dis, 0), 
-                            1, 1, 
+                            0, 0, 
                             64 * MF, 32 * MF,
                             0, 
                             BlackPixel(dis, 0), 
@@ -97,20 +97,6 @@ void fc8_display_draw(const int32_t screen[64])
   XFlush(dis);
 }
 #undef BTEST
-
-// Helper function to map from Xlib key codes to CHIP-8 key code.
-// TODO: replace this with a switch
-/*static inline int findkey(unsigned int xkey) {
-
-  const unsigned int keymap[16] = 
-    {15,26,27,28,20,21,22,8,9,10,14,16,29,23,11,17};
-
-  for (int i = 0; i < 16; ++i) {
-    if (xkey == keymap[i])
-      return i;
-  }
-  return -1;
-} */
 
 
 //

@@ -2,6 +2,7 @@ program fc8
     
 use, intrinsic :: iso_c_binding, only: c_null_char
 
+use fc8_cmd, only: process_cmdline, filename, zoom
 use fc8_io
 use fc8_vm, only: vexec, loadgame, timers, screen => pixelbuf
 use sleep_std, only: sleep_ms
@@ -10,7 +11,6 @@ implicit none
 
 character(len=*), parameter :: wtitle  = 'CHIP-8 Interpreter'
 
-character(len=256) :: filename
 integer :: nargs
 logical :: rom_exists
 
@@ -19,26 +19,11 @@ integer(prec) :: delta, tprev, tcurr, trate, tstep
 
 integer :: ievent, ikey, ireq
 
-nargs = command_argument_count()
-if (nargs /= 1) then
-    print *, "Wrong number of arguments."
-    print *, "Usage:"
-    print *, "   chip8 <filename>"
-    stop
-end if
-
-call get_command_argument(1,filename)
-print *, filename
-
-inquire(file=filename,exist=rom_exists)
-if (.not. rom_exists) then
-    print *, "Cartridge " // trim(filename) // " doesn't exist"
-    stop
-end if
+call process_cmdline()
 
 call loadgame(filename)
 
-call display_open(wtitle,len(wtitle),8)
+call display_open(wtitle,len(wtitle),zoom)
 
 call system_clock(tprev,trate)
 tstep = nint(trate/60.d0)

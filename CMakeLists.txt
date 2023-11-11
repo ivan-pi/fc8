@@ -90,6 +90,7 @@ endif()
 add_executable(fc8
     src/fc8.f90 
     src/fc8_vm.f90
+    src/fc8_cmd.f90
     src/sleep_std.f90
     src/sleep.c
     src/randint8.c)

@@ -17,11 +17,11 @@ public :: keypad
 
 interface
 
-    subroutine display_open(title,n,mf) bind(c,name="fc8_display_open")
-        import c_int, c_char
+    subroutine display_open(title,n,zoom) bind(c,name="fc8_display_open")
+        import c_int, c_char, c_float
         integer(c_int), intent(in), value :: n
         character(kind=c_char), intent(in) :: title(n)
-        integer(c_int), intent(in), optional :: mf
+        real(c_float), intent(in), optional :: zoom
     end subroutine
 
     subroutine display_close() bind(c,name="fc8_display_close")
@@ -43,7 +43,7 @@ interface
 end interface
 
 type, bind(c) :: fc8_keypad
-    logical(c_bool) :: key(0:15)
+    logical(c_bool) :: key(0:15) = .false.
 end type
 
 type(fc8_keypad), bind(c,name="keypad"), protected :: keypad
