@@ -157,7 +157,7 @@ Other assemblers:
 
 ## Acknowledgements
 
-Special thanks to:
+Special thanks goes to:
 
-- @vmagnin, for supportive discussions, and testing of the build system and keyboard bindings on various platforms
-- @interkosmos, for supportive discussions, code suggestions and educational Fortran content
+- [@vmagnin](https://github.com/vmagnin/), for supportive discussions, and testing of the build system and keyboard bindings on various platforms
+- [@interkosmos](https://github.com/interkosmos), for supportive discussions, code suggestions and educational Fortran content
