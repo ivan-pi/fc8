@@ -1,8 +1,8 @@
-# FC8
+# fc8
 
 Fortran CHIP-8 interpreter
 
-## Building FC8
+## Building fc8
 
 ### Prerequisites
 
@@ -10,8 +10,9 @@ The following tools and libraries are required:
 
 * Fortran 2008 compiler such as `gfortran` or `ifx`
 * C compiler
-* CMake v3.15 or higher, and/or Make
+* CMake v3.16 or higher
 * Xlib - the X window system protocol client library
+* (alternative, still beta-quality) SDL2
 
 ### Build steps
 
@@ -24,12 +25,12 @@ $ make
 ```
 If everything worked, you should now be able to play a CHIP-8 game using:
 ```
-$ ./FC8 <path/to/cartridge>
+$ ./fc8 <path/to/cartridge>
 ```
 
-The command-line options available (still TODO!) are:
+The command-line options available (:warning: still TO DO) are:
 ```
-Usage FC8 [-h] [-q] [-w|-h|-m <N>] [-d <server>] [-r <N>]
+Usage: ./fc8 [-h] [-q] [-w|-h|-m <N>] [-d <server>] [-r <N>]
 
     Options:
 
@@ -54,7 +55,7 @@ Usage FC8 [-h] [-q] [-w|-h|-m <N>] [-d <server>] [-r <N>]
 Buttons:
 - ESC: Escape
 - 0: Reload game cartridge
-- Space: Pause/Run
+- Space: Pause/Run (NOT IMPLEMENTED)
 
 Other ideas:
 - configurable background and foreground colors
@@ -65,17 +66,17 @@ Other ideas:
 
 ### X-forwarding
 
-Since FC8 uses the X11 window library (via EGGX/ProCALL), you can run the interpreter on a remote machine using X-forwarding. To do so you must have a running X-server (e.g. Xming on Windows, XQuartz on Mac). After logging in with
+When the X11 version of fc8 was built, you can run it on a remote machine using X-forwarding. To do so you must have a running X-server (e.g. Xming on Windows, XQuartz on Mac). After logging in with
 ```
 $ ssh -Y <userID>@<destination>
 ```
-you should be able to run FC8 remotely, including the communication and forwarding of key-presses.
+you should be able to run fc8 remotely.
 
 ## Examples
 
-A few example ROMs can be bound in the `cartridges/` directory. ROMS/cartridges can be loaded at the command line:
+Some example ROMs can be bound in the `cartridges/` directory. ROMS/cartridges can be loaded at the command line:
 ```
-$ ./FC8 <cartridge>
+$ ./fc8 <cartridge>
 ```
 
 ## Tests
