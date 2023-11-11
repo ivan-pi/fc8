@@ -154,3 +154,10 @@ Other assemblers:
 
 - [CHIP-8 (GitHub)](https://github.com/topics/chip8)
 - [CHIP-8 (GitLab)](https://gitlab.com/explore/projects/topics/CHIP-8)
+
+## Acknowledgements
+
+Special thanks to:
+
+- @vmagnin, for supportive discussions, and testing of the build system and keyboard bindings on various platforms
+- @interkosmos, for supportive discussions, code suggestions and educational Fortran content
