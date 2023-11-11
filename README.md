@@ -20,15 +20,22 @@ Clone the repository and build using CMake
 ```txt
 $ git clone
 $ mkdir build && cd build
-$ cmake ..
+$ cmake .. -DFC8_KEYBOARD=qwertz
 $ make
 ```
-If everything worked, you should now be able to play a CHIP-8 game using:
+The keyboard binding is fixed at compile time. You can select between:
+- `qwerty` (default)
+- `qwertz`
+- `azerty`
+
+If the build was succesful, you should now be able to play a CHIP-8 game using:
 ```
 $ ./fc8 <path/to/cartridge>
 ```
 
-The command-line options available (:warning: still TO DO) are:
+## Using fc8
+
+The full set of command-line options is:
 ```
 Usage: fc8 [-h] [-s] [-zoom=Z] [--config=FILE] <path-to-ch8>
 
@@ -47,16 +54,13 @@ options:
 
 ```
 
-The interpreter displays responds to the following keys
-- <kbd>Escape</kbd>: Quit
+The interpreter display responds to the following keys
+- <kbd>Escape</kbd>: Quit fc8
 - <kbd>0</kbd>: Reload ROM file ("replay")
 
-Other ideas:
-- configurable background and foreground colors
-- configurable clock-speed
-- debugging, by writing to program memory with the hex-keyboard (simple OS essentially, kind of like here: https://www.reddit.com/r/EmuDev/comments/hjlh4u/sharing_yet_another_chip8_emulator/)
-- REPL mode
-- debugger
+The CHIP-8 keypad is bound to conventional keyboards as follows:
+
+![CHIP-8 key binding](keypads.png)
 
 ### X-forwarding
 
