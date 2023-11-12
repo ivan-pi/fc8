@@ -85,7 +85,7 @@ if(graphics STREQUAL sfml)
 endif()
 
 if (CMAKE_Fortran_COMPILER_ID STREQUAL GNU)
-    set_source_files_properties(src/fc8_vm.f90 PROPERTIES COMPILE_OPTIONS
+    set_source_files_properties(src/fc8_vm.F90 PROPERTIES COMPILE_OPTIONS
         "$<$<VERSION_LESS:$<Fortran_COMPILER_VERSION>,10>:-fno-range-check>")
 endif()
 
@@ -94,11 +94,16 @@ endif()
 #
 add_executable(fc8
     src/fc8.f90 
-    src/fc8_vm.f90
+    src/fc8_vm.F90
     src/fc8_cmd.f90
     src/sleep_std.f90
     src/sleep.c
     src/randint8.c)
+
+if (CMAKE_Fortran_COMPILER_ID STREQUAL PGI)
+    # nvfortran (former PGI) compiler lacks some F2008 intrinsics
+    target_sources(fc8 PRIVATE src/PGI/shift.f90)
+endif()
 
 target_link_libraries(fc8 fc8_io)
 

@@ -138,6 +138,30 @@ end interface
 
 logical, parameter :: debug = .false.
 
+#ifdef  __NVCOMPILER
+! nvfortran v22.7 lacks the F2008 bit-shifting intrinsics
+interface shiftl
+   pure integer function shiftl_1(i,n)
+      integer(1), value :: i
+      integer, value :: n
+   end function
+   pure integer function shiftl_2(i,n)
+      integer(2), value :: i
+      integer, value :: n
+   end function
+end interface
+interface shiftr
+   pure integer function shiftr_1(i,n)
+      integer(1), value :: i
+      integer, value :: n
+   end function
+   pure integer function shiftr_2(i,n)
+      integer(2), value :: i
+      integer, value :: n
+   end function
+end interface
+#endif
+
 contains
 
    pure function asuint_int16(x,res) result(y)
