@@ -84,6 +84,11 @@ if(graphics STREQUAL sfml)
     target_link_libraries(fc8_io PRIVATE sfml-graphics sfml-window)
 endif()
 
+if (CMAKE_Fortran_COMPILER_ID STREQUAL GNU)
+    set_source_files_properties(src/fc8_vm.f90 PROPERTIES COMPILE_OPTIONS
+        "$<$<VERSION_LESS:$<Fortran_COMPILER_VERSION>,10>:-fno-range-check>")
+endif()
+
 #
 # Virtual machine
 #
