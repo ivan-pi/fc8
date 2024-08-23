@@ -65,38 +65,28 @@ count_sm:
 ;   V5 ... the value we want to output
 ;
 write:
-    LD I, ascii_c   ; Draw the label "COUNT = "
-    DRW V3, V4, 5
-    ADD V3, 6
-    LD I, ascii_o
-    DRW V3, V4, 5
-    ADD V3, 6
-    LD I, ascii_u
-    DRW V3, V4, 5
-    ADD V3, 6
-    LD I, ascii_n
-    DRW V3, V4, 5
-    ADD V3, 6
-    LD I, ascii_t
-    DRW V3, V4, 5
-    ADD V3, 6
-    LD I, ascii_eq
-    DRW V3, V4, 5
-    ADD V3, 6
-    LD I, .work     ; Now draw the digit
-    LD B, V5
-    LD V2, [I]
-    LD F, V0
+    LD V0, 6            ; 6 characters
+    LD V1, 5            ; address increment
+    LD I, ascii_c - 5   ; initial address, offset by 5
+.begin:
+    ADD I, V1       ; Load character address.
+    DRW V3, V4, 5   ; Draw character.
+    ADD V3, 6       ; Increment x-coordinate.
+    ADD V0, -1      ; Decrement counter.
+    SE V0, 0        ; If characters remain,
+    JP .begin       ; return to draw next character.
+    LD I, digits
+    LD B, V5        ; Load 
+    LD V2, [I]      ; Load decimals into V0-V2
+    LD F, V0        ; Digit 1
     DRW V3, V4, 5
     ADD V3, 5
-    LD F, V1
+    LD F, V1        ; Digit 2
     DRW V3, V4, 5
     ADD V3, 5   
-    LD F, V2
+    LD F, V2        ; Digit 3
     DRW V3, V4, 5
     RET
-.work:
-    #res 3
 
 ;
 ; Alphabetic characters
@@ -107,38 +97,36 @@ ascii_c:
     #d8 0b10000000
     #d8 0b10000000
     #d8 0b11111000
-
 ascii_o:
     #d8 0b11111000
     #d8 0b10001000
     #d8 0b10001000
     #d8 0b10001000
     #d8 0b11111000
-
 ascii_u:
     #d8 0b10001000
     #d8 0b10001000
     #d8 0b10001000
     #d8 0b10001000
     #d8 0b11111000
-
 ascii_n:
     #d8 0b10001000
     #d8 0b11001000
     #d8 0b10101000
     #d8 0b10011000
     #d8 0b10001000
-
 ascii_t:
     #d8 0b11111000
     #d8 0b00100000
     #d8 0b00100000
     #d8 0b00100000
     #d8 0b00100000
-
 ascii_eq:
     #d8 0b00000000
     #d8 0b11111000
     #d8 0b00000000
     #d8 0b11111000
     #d8 0b00000000
+digits:
+    #res 3
+

@@ -1,12 +1,15 @@
 
 ASM_FLAGS=
 
+.PHONY: all clean
+
 all: rocket.rom	\
 	 jumping_X_and_O.rom \
 	 Fishie.rom \
 	 random_number_test.rom \
 	 delay_timer_test.rom \
-	 show_bcd.rom
+	 show_bcd.rom \
+	 counter.rom
 
 rocket.rom: rocket.asm chip8.asm
 	customasm -o $@ $(ASM_FLAGS) $<
@@ -29,6 +32,8 @@ delay_timer_test.rom: delay_timer_test.asm chip8.asm
 show_bcd.rom: show_bcd.asm chip8.asm
 	customasm -o $@ $(ASM_FLAGS) $<
 
-.phony: clean
+counter.rom: counter.asm chip8.asm
+	customasm -o $@ $(ASM_FLAGS) $<
+
 clean:
-	rm *.rom
+	rm -vf *.rom
