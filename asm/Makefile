@@ -5,7 +5,8 @@ all: rocket.rom	\
 	 jumping_X_and_O.rom \
 	 Fishie.rom \
 	 random_number_test.rom \
-	 delay_timer_test.rom 
+	 delay_timer_test.rom \
+	 show_bcd.rom
 
 rocket.rom: rocket.asm chip8.asm
 	customasm -o $@ $(ASM_FLAGS) $<
@@ -25,6 +26,8 @@ random_number_test.rom: random_number_test.asm chip8.asm
 delay_timer_test.rom: delay_timer_test.asm chip8.asm
 	customasm -o $@ $(ASM_FLAGS) $<
 
+show_bcd.rom: show_bcd.asm chip8.asm
+	customasm -o $@ $(ASM_FLAGS) $<
 
 .phony: clean
 clean:
