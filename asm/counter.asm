@@ -6,6 +6,9 @@
 ; The counter counts how many time the routine
 ; count is called. 
 ; Finally,the value is printed to the display.
+;
+; The example served for a discussion at Fortran-Lang:
+; https://fortran-lang.discourse.group/t/save-attribute-scope/8509/11?u=ivanpribec
 
 main:
     LD VA, 0        ; VA = 0
