@@ -13,7 +13,7 @@ all: rocket.rom	\
 	 delay_timer_test.rom \
 	 show_bcd.rom \
 	 counter.rom \
-	 factorial.asm
+	 factorial.rom
 
 clean:
 	rm -vf *.rom
