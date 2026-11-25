@@ -1,12 +1,12 @@
 #include "chip8.asm"
 
 main:
-    LD V1, 0x0    ; The value to draw
+    LD V1, 0x0   ; The value to draw
     LD V3, -3    ; x- and y- coordinate
     LD V4, 4
 .loop:
     ADD V3, 5
-    CALL sss    ; Show letter
+    CALL sss     ; Show letter
     ADD V1, 1
     SNE V1, 10
     JP .double
@@ -32,7 +32,7 @@ sss:
 
 
 ; Show double-digit score (BCD)
-; The value to draw should be placed in V0
+; The value to draw should be placed in V1
 ; The coordinates should be set in V3, V4
 sds:
     LD I, 0x2A0         ; SSS:      3 byte work area
