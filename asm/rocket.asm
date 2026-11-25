@@ -68,7 +68,7 @@ main:
     LD V0, 0x03         ; Step 10:
     LD DT, V0           ;
     SE V8, 0x00         ;
-    JP .step12          ;           Step 12
+    JP .step5           ;           Step 5
     
 .step11:
     CALL sss            ; Step 11:  Erase score
