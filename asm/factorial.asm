@@ -7,7 +7,7 @@
 ; at Collège de France: https://xavierleroy.org/CdF/2023-2024/
 
 
-n = 5
+n = 1
 
 main:
     LD V3, 2
@@ -31,15 +31,15 @@ main:
 ;   V1 ... input n, is destroyed
 ;
 factorial:
-    LD V0, 1        ; start with 0
-    SNE V1, 0       ; if n == 0, we're done
+    LD V0, 1        ; 0! = 1! = 1
+.next:
+    SNE V1, 0       ; done when n has counted down to 0 ...
     RET
-.factor:
-    call multiply   ; multiply value V0 *= V1
+    SNE V1, 1       ; ... or 1
+    RET
+    call multiply   ; V0 *= V1
     ADD V1, -1
-    SE V1, 1
-    JP .factor
-    RET
+    JP .next
 
 ; Multiply function, V0 *= V1
 multiply:
