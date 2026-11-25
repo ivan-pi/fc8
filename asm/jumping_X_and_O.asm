@@ -32,8 +32,8 @@ jump:
     LD V4, DT       ; Timer -> V4
     SE V4, 0        ; Skip if V4 (timer) = 0
     JP .timer       ; Return to "timer" if V4 /= 0
-    SNE VF, 1       ; Skip if VF = 1 (checking for overlap)
-    JP .show2       ; Go to "show2" if VF /= 01 (overlap, switch patterns)
+    SNE VF, 1       ; Skip if VF /= 1 (checking for overlap)
+    JP .show2       ; Go to "show2" if VF == 01 (overlap, switch patterns)
     DRW V1, V2, 5   ; If no overlap, show old pattern to erase
     RND V1, 0x3F    ; Random number (6-bit) to V1 (new x-coordinate)
     RND V2, 0x1F    ; Random number (5-bit) to V2 (new y-coordinate)
