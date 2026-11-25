@@ -13,7 +13,10 @@ all: rocket.rom	\
 	 delay_timer_test.rom \
 	 show_bcd.rom \
 	 counter.rom \
-	 factorial.rom
+	 factorial.rom \
+	 kaleidoscope.rom \
+	 maze.rom \
+	 cellular_automaton.rom
 
 clean:
 	rm -vf *.rom
